@@ -4,13 +4,13 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { formatDate, formatRelative } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import { useUserDetail, useSuspendUser, useResendVerification, useDeleteUser } from '../queries'
-import type { TenantUser } from '@/lib/types'
+import { useUserDetail, useUpdateUser, useDeleteUser } from '../queries'
+import type { AdminUserRow } from '@/lib/types'
 
 interface UserDetailSheetProps {
-  user: TenantUser | null
+  user: AdminUserRow | null
   onClose: () => void
 }
 
@@ -21,8 +21,7 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
   const [dialog, setDialog] = useState<Dialog>(null)
 
   const { data: detail, isLoading } = useUserDetail(user?.id ?? '')
-  const suspend = useSuspendUser()
-  const resend = useResendVerification()
+  const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -30,23 +29,23 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
 
   if (!user) return null
 
-  async function handleSuspend(reason?: string) {
+  async function handleSuspend() {
     if (!user) return
-    await suspend.mutateAsync({ id: user.id, suspended: !user.suspended, ...(reason ? { reason } : {}) })
+    await updateUser.mutateAsync({ id: user.id, suspended: !user.suspended })
     toast.success(user.suspended ? 'User reactivated.' : 'User suspended.')
     setDialog(null)
     onClose()
   }
 
-  async function handleResend() {
+  async function handleForceVerify() {
     if (!user) return
-    await resend.mutateAsync(user.id)
-    toast.success('Verification email sent.')
+    await updateUser.mutateAsync({ id: user.id, emailVerified: true })
+    toast.success('Email marked as verified.')
   }
 
-  async function handleDelete(reason?: string) {
-    if (!user || !reason) return
-    await deleteUser.mutateAsync({ id: user.id, reason })
+  async function handleDelete() {
+    if (!user) return
+    await deleteUser.mutateAsync(user.id)
     toast.success('User deleted.')
     setDialog(null)
     onClose()
@@ -104,20 +103,23 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
             </div>
           )}
 
-          {detail && detail.memberships.length > 0 && (
+          {detail && detail.workspaces.length > 0 && (
             <div className="mt-6">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Users className="h-3.5 w-3.5" /> Workspace memberships
               </p>
               <ul className="space-y-2">
-                {detail.memberships.map((m) => (
+                {detail.workspaces.map((w) => (
                   <li
-                    key={m.workspaceId}
+                    key={w.id}
                     className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
                   >
-                    <span className="truncate">{m.workspaceName}</span>
+                    <div className="min-w-0">
+                      <p className="truncate">{w.name}</p>
+                      <p className="text-xs text-muted-foreground">/{w.slug}</p>
+                    </div>
                     <Badge variant="outline" className="ml-2 shrink-0 capitalize">
-                      {m.role}
+                      {w.role}
                     </Badge>
                   </li>
                 ))}
@@ -137,9 +139,9 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
                 {user.suspended ? 'Reactivate' : 'Suspend'}
               </Button>
               {!user.emailVerified && (
-                <Button variant="outline" size="sm" onClick={handleResend}>
+                <Button variant="outline" size="sm" onClick={handleForceVerify}>
                   <Mail className="h-3.5 w-3.5" />
-                  Resend verification
+                  Force verify
                 </Button>
               )}
               {canDelete && (
@@ -163,7 +165,6 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
         description={`Suspend ${user.name}? They will be unable to log in.`}
         confirmLabel="Suspend"
         destructive
-        reasonLabel="Reason (required)"
         onConfirm={handleSuspend}
         onCancel={() => setDialog(null)}
       />
@@ -178,15 +179,13 @@ export function UserDetailSheet({ user, onClose }: UserDetailSheetProps) {
       <ConfirmDialog
         open={dialog === 'delete'}
         title="Delete user"
-        description={`Permanently delete ${user.name} and all associated data. This cannot be undone.`}
+        description={`Permanently delete ${user.name} and all associated data. Returns 409 if they own workspaces.`}
         confirmLabel="Delete permanently"
         destructive
         requireTyping={user.email}
-        reasonLabel="Reason (required, stored in audit log)"
         onConfirm={handleDelete}
         onCancel={() => setDialog(null)}
       />
-
     </>
   )
 }

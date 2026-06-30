@@ -12,7 +12,7 @@ import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
-import type { TenantUser } from '@/lib/types'
+import type { AdminUserRow } from '@/lib/types'
 import { useUsers } from './queries'
 import { UserDetailSheet } from './components/UserDetailSheet'
 
@@ -23,11 +23,11 @@ export function UsersPage() {
   const [q, setQ] = useState('')
   const [suspended, setSuspended] = useState<boolean | undefined>()
   const [sorting, setSorting] = useState<SortingState>([])
-  const [selected, setSelected] = useState<TenantUser | null>(null)
+  const [selected, setSelected] = useState<AdminUserRow | null>(null)
 
   const { data, isLoading } = useUsers({ page, limit: LIMIT, q: q || undefined, suspended })
 
-  const columns: ColumnDef<TenantUser>[] = [
+  const columns: ColumnDef<AdminUserRow>[] = [
     {
       accessorKey: 'name',
       header: 'Name',

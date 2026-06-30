@@ -12,35 +12,29 @@ import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
-import type { WorkspacePlanStatus, WorkspaceRow } from '@/lib/types'
+import type { AdminWorkspaceRow } from '@/lib/types'
 import { useWorkspaces } from './queries'
-import { StorageBar } from './components/StorageBar'
 import { WorkspaceDetailSheet } from './components/WorkspaceDetailSheet'
 
 const LIMIT = 20
 
-const STATUS_VARIANT: Record<WorkspacePlanStatus, 'success' | 'warning' | 'error' | 'secondary'> = {
-  active: 'success',
-  past_due: 'warning',
-  suspended: 'error',
-  trialing: 'secondary',
+function statusVariant(s: string | null) {
+  if (s === 'active') return 'success' as const
+  if (s === 'past_due') return 'warning' as const
+  if (s === 'canceled' || s === 'paused') return 'error' as const
+  if (s === 'trialing') return 'secondary' as const
+  return 'outline' as const
 }
 
 export function WorkspacesPage() {
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
-  const [status, setStatus] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [selected, setSelected] = useState<WorkspaceRow | null>(null)
+  const [selected, setSelected] = useState<AdminWorkspaceRow | null>(null)
 
-  const { data, isLoading } = useWorkspaces({
-    page,
-    limit: LIMIT,
-    q: q || undefined,
-    status: status || undefined,
-  })
+  const { data, isLoading } = useWorkspaces({ page, limit: LIMIT, q: q || undefined })
 
-  const columns: ColumnDef<WorkspaceRow>[] = [
+  const columns: ColumnDef<AdminWorkspaceRow>[] = [
     {
       accessorKey: 'name',
       header: 'Workspace',
@@ -55,23 +49,24 @@ export function WorkspacesPage() {
       accessorKey: 'ownerEmail',
       header: 'Owner',
       cell: ({ getValue }) => (
-        <span className="text-sm text-muted-foreground">{getValue<string>()}</span>
+        <span className="text-sm text-muted-foreground">{getValue<string | null>() ?? '—'}</span>
       ),
     },
     {
-      accessorKey: 'status',
+      accessorKey: 'subscriptionStatus',
       header: 'Status',
       cell: ({ getValue }) => {
-        const s = getValue<WorkspacePlanStatus>()
-        return <Badge variant={STATUS_VARIANT[s]} className="capitalize">{s.replace('_', ' ')}</Badge>
+        const s = getValue<string | null>()
+        return <Badge variant={statusVariant(s)}>{s?.replace('_', ' ') ?? '—'}</Badge>
       },
     },
     {
       accessorKey: 'planKey',
       header: 'Plan',
-      cell: ({ getValue }) => (
-        <Badge variant="outline" className="capitalize">{getValue<string>()}</Badge>
-      ),
+      cell: ({ getValue }) => {
+        const v = getValue<string | null>()
+        return v ? <Badge variant="outline">{v}</Badge> : <span className="text-muted-foreground">—</span>
+      },
     },
     {
       accessorKey: 'memberCount',
@@ -82,13 +77,6 @@ export function WorkspacesPage() {
       accessorKey: 'projectCount',
       header: 'Projects',
       cell: ({ getValue }) => <span className="tabular-nums">{getValue<number>()}</span>,
-    },
-    {
-      accessorKey: 'storageUsedMb',
-      header: 'Storage',
-      cell: ({ row }) => (
-        <StorageBar usedMb={row.original.storageUsedMb} capMb={100} />
-      ),
     },
     {
       accessorKey: 'createdAt',
@@ -125,19 +113,7 @@ export function WorkspacesPage() {
         value={q}
         onChange={(v) => { setQ(v); setPage(1) }}
         placeholder="Search by name or slug…"
-      >
-        <select
-          value={status}
-          onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="past_due">Past due</option>
-          <option value="suspended">Suspended</option>
-          <option value="trialing">Trialing</option>
-        </select>
-      </FilterBar>
+      />
 
       <DataTable
         table={table}

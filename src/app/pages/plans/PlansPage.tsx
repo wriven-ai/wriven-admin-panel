@@ -5,11 +5,12 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatPrice } from '@/lib/format'
-import type { Plan } from '@/lib/types'
+import type { PlanView } from '@/lib/types'
 import { usePlans, useCreatePlan, useUpdatePlan } from './queries'
 import { PlanForm } from './components/PlanForm'
+import type { PlanFormValues } from './components/PlanForm'
 
-type Mode = { type: 'create' } | { type: 'edit'; plan: Plan } | null
+type Mode = { type: 'create' } | { type: 'edit'; plan: PlanView } | null
 
 export function PlansPage() {
   const [mode, setMode] = useState<Mode>(null)
@@ -17,7 +18,7 @@ export function PlansPage() {
   const createPlan = useCreatePlan()
   const updatePlan = useUpdatePlan()
 
-  async function handleSubmit(values: Parameters<typeof createPlan.mutateAsync>[0]) {
+  async function handleSubmit(values: PlanFormValues) {
     if (mode?.type === 'edit') {
       await updatePlan.mutateAsync({ id: mode.plan.id, ...values })
       toast.success('Plan updated.')
@@ -72,13 +73,18 @@ export function PlansPage() {
           <div key={plan.id} className="rounded-lg border bg-card p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold">{plan.name}</p>
                   <Badge variant="outline" className="font-mono text-xs">{plan.key}</Badge>
                   {!plan.active && <Badge variant="error">Inactive</Badge>}
+                  {!plan.isPublic && <Badge variant="secondary">Private</Badge>}
                 </div>
+                {plan.description && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">{plan.description}</p>
+                )}
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   {formatPrice(plan.priceMonthly)} / month
+                  {plan.priceYearly && ` · ${formatPrice(plan.priceYearly)} / year`}
                 </p>
               </div>
               <Button
@@ -94,7 +100,8 @@ export function PlansPage() {
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {Object.entries(plan.limits).map(([k, v]) => (
                   <span key={k}>
-                    <span className="capitalize">{k}</span>: <strong className="text-foreground">{v ?? '∞'}</strong>
+                    <span className="capitalize">{k}</span>:{' '}
+                    <strong className="text-foreground">{v ?? '∞'}</strong>
                   </span>
                 ))}
               </div>

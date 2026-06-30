@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
-import type { Paginated, ProjectRow } from '@/lib/types'
+import type { Paginated, AdminProjectRow } from '@/lib/types'
 
 interface ProjectListParams {
   page: number
@@ -21,14 +21,13 @@ export function useProjects(params: ProjectListParams) {
 
   return useQuery({
     queryKey: qk.projects.list(params as Record<string, unknown>),
-    queryFn: () => api.get<Paginated<ProjectRow>>(`/admin/projects?${sp}`),
+    queryFn: () => api.get<Paginated<AdminProjectRow>>(`/admin/projects?${sp}`),
   })
 }
 
 export function useDeleteProject() {
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      api.del(`/admin/projects/${id}`, { reason }),
+    mutationFn: (id: string) => api.del(`/admin/projects/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
   })
 }

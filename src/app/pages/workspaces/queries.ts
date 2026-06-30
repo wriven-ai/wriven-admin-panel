@@ -1,19 +1,13 @@
-import { api } from "@/lib/api";
-import { queryClient } from "@/lib/query-client";
-import { qk } from "@/lib/query-keys";
-import type {
-  Paginated,
-  Plan,
-  WorkspaceDetail,
-  WorkspaceRow,
-} from "@/lib/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { qk } from '@/lib/query-keys'
+import { queryClient } from '@/lib/query-client'
+import type { Paginated, AdminWorkspaceRow, AdminWorkspaceDetail, PlanView, AssignPlanDto } from '@/lib/types'
 
 interface WorkspaceListParams {
-  page: number;
-  limit: number;
-  q?: string;
-  status?: string;
+  page: number
+  limit: number
+  q?: string
 }
 
 export function useWorkspaces(params: WorkspaceListParams) {
@@ -21,62 +15,36 @@ export function useWorkspaces(params: WorkspaceListParams) {
     page: String(params.page),
     limit: String(params.limit),
     ...(params.q ? { q: params.q } : {}),
-    ...(params.status ? { status: params.status } : {}),
-  });
+  })
 
   return useQuery({
     queryKey: qk.workspaces.list(params as Record<string, unknown>),
-    queryFn: () => api.get<Paginated<WorkspaceRow>>(`/admin/workspaces?${sp}`),
-  });
+    queryFn: () => api.get<Paginated<AdminWorkspaceRow>>(`/admin/workspaces?${sp}`),
+  })
 }
 
 export function useWorkspaceDetail(id: string) {
   return useQuery({
     queryKey: qk.workspaces.detail(id),
-    queryFn: () => api.get<WorkspaceDetail>(`/admin/workspaces/${id}`),
+    queryFn: () => api.get<AdminWorkspaceDetail>(`/admin/workspaces/${id}`),
     enabled: Boolean(id),
-  });
+  })
 }
 
 export function usePlans() {
   return useQuery({
     queryKey: qk.plans.list(),
-    queryFn: () => api.get<Plan[]>("/admin/plans"),
-  });
-}
-
-export function useSuspendWorkspace() {
-  return useMutation({
-    mutationFn: ({
-      id,
-      suspended,
-      reason,
-    }: {
-      id: string;
-      suspended: boolean;
-      reason?: string;
-    }) => api.patch(`/admin/workspaces/${id}`, { suspended, reason }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] }),
-  });
+    queryFn: () => api.get<PlanView[]>('/admin/plans'),
+  })
 }
 
 export function useAssignPlan() {
   return useMutation({
-    mutationFn: ({
-      id,
-      planId,
-      overrides,
-    }: {
-      id: string;
-      planId: string;
-      overrides?: Record<string, number>;
-    }) => api.put(`/admin/workspaces/${id}/plan`, { planId, overrides }),
+    mutationFn: ({ id, dto }: { id: string; dto: AssignPlanDto }) =>
+      api.put(`/admin/workspaces/${id}/plan`, dto),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-      queryClient.invalidateQueries({
-        queryKey: qk.workspaces.detail(vars.id),
-      });
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] })
+      queryClient.invalidateQueries({ queryKey: qk.workspaces.detail(vars.id) })
     },
-  });
+  })
 }

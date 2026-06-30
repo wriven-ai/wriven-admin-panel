@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AdminMe } from '@/lib/types'
+import type { AdminView } from '@/lib/types'
 
 interface AdminStore {
-  me: AdminMe | null
+  me: AdminView | null
   theme: 'light' | 'dark'
   sidebarCollapsed: boolean
-  setMe: (me: AdminMe | null) => void
+  setMe: (me: AdminView | null) => void
   clear: () => void
   toggleTheme: () => void
   toggleSidebar: () => void

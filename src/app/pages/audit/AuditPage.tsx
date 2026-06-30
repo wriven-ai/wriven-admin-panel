@@ -6,12 +6,12 @@ import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { AuditEvent } from '@/lib/types'
+import type { AuditLogView } from '@/lib/types'
 import { useAuditLog } from './queries'
 
 const LIMIT = 30
 
-function AuditRow({ event }: { event: AuditEvent }) {
+function AuditRow({ event }: { event: AuditLogView }) {
   const [expanded, setExpanded] = useState(false)
   const hasMetadata = Object.keys(event.metadata).length > 0
 
@@ -33,7 +33,7 @@ function AuditRow({ event }: { event: AuditEvent }) {
         ) : (
           <span className="h-3.5 w-3.5 shrink-0" />
         )}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-xs font-medium">{event.action}</span>
             {event.targetType && (
@@ -43,7 +43,7 @@ function AuditRow({ event }: { event: AuditEvent }) {
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {event.adminEmail}
+            {event.adminEmail ?? event.adminUserId}
             {event.ip && ` · ${event.ip}`}
           </p>
         </div>

@@ -3,65 +3,40 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatDate, formatPrice } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import { cn } from '@/lib/utils'
-import {
-  useWorkspaceDetail,
-  useSuspendWorkspace,
-  useAssignPlan,
-  usePlans,
-} from '../queries'
-import type { WorkspaceRow } from '@/lib/types'
+import { useWorkspaceDetail, useAssignPlan, usePlans } from '../queries'
+import type { AdminWorkspaceRow } from '@/lib/types'
 
 interface WorkspaceDetailSheetProps {
-  workspace: WorkspaceRow | null
+  workspace: AdminWorkspaceRow | null
   onClose: () => void
 }
 
-type Tab = 'members' | 'plan'
-type Dialog = 'suspend' | 'reactivate' | null
-
-const STATUS_VARIANT = {
-  active: 'success',
-  past_due: 'warning',
-  suspended: 'error',
-  trialing: 'secondary',
-} as const
+type Tab = 'members' | 'projects' | 'plan'
 
 export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailSheetProps) {
   const role = useAdminStore((s) => s.me?.role)
   const [tab, setTab] = useState<Tab>('members')
-  const [dialog, setDialog] = useState<Dialog>(null)
-  const [selectedPlan, setSelectedPlan] = useState('')
+  const [selectedPlanKey, setSelectedPlanKey] = useState('')
 
   const { data: detail, isLoading } = useWorkspaceDetail(workspace?.id ?? '')
   const { data: plans } = usePlans()
-  const suspend = useSuspendWorkspace()
   const assignPlan = useAssignPlan()
 
-  const canModerate = role === 'admin' || role === 'moderator'
   const canAdmin = role === 'admin'
 
   if (!workspace) return null
 
-  async function handleSuspend(reason?: string) {
-    if (!workspace) return
-    const isSuspended = workspace.status === 'suspended'
-    await suspend.mutateAsync({ id: workspace.id, suspended: !isSuspended, reason })
-    toast.success(isSuspended ? 'Workspace reactivated.' : 'Workspace suspended.')
-    setDialog(null)
-    onClose()
-  }
-
   async function handleAssignPlan() {
-    if (!workspace || !selectedPlan) return
-    await assignPlan.mutateAsync({ id: workspace.id, planId: selectedPlan })
+    if (!workspace || !selectedPlanKey) return
+    await assignPlan.mutateAsync({ id: workspace.id, dto: { planKey: selectedPlanKey } })
     toast.success('Plan updated.')
+    setSelectedPlanKey('')
   }
 
-  const isSuspended = workspace.status === 'suspended'
+  const currentPlan = plans?.find((p) => p.key === workspace.planKey)
 
   return (
     <>
@@ -79,14 +54,14 @@ export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailShee
 
         <div className="border-b px-5">
           <div className="flex gap-4">
-            {(['members', 'plan'] as Tab[]).map((t) => (
+            {(['members', 'projects', 'plan'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={cn(
                   'border-b-2 py-3 text-sm capitalize transition-colors',
                   tab === t
-                    ? 'border-brand-accent text-foreground font-medium'
+                    ? 'border-brand-accent font-medium text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -98,9 +73,13 @@ export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailShee
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="mb-4 flex flex-wrap gap-2">
-            <Badge variant={STATUS_VARIANT[workspace.status]}>{workspace.status}</Badge>
-            <Badge variant="outline">{workspace.planKey}</Badge>
-            <span className="text-xs text-muted-foreground">Owner: {workspace.ownerEmail}</span>
+            {workspace.subscriptionStatus && (
+              <Badge variant="outline">{workspace.subscriptionStatus.replace('_', ' ')}</Badge>
+            )}
+            {workspace.planKey && <Badge variant="outline">{workspace.planKey}</Badge>}
+            <span className="text-xs text-muted-foreground">
+              Owner: {workspace.ownerEmail ?? '—'}
+            </span>
           </div>
 
           <dl className="mb-5 grid grid-cols-3 gap-3 text-sm">
@@ -146,17 +125,32 @@ export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailShee
             </ul>
           )}
 
-          {tab === 'plan' && detail && (
+          {tab === 'projects' && detail && (
+            <ul className="space-y-2">
+              {detail.projects.map((p) => (
+                <li key={p.id} className="rounded-md border px-3 py-2 text-sm">
+                  <p className="font-medium">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">/{p.slug}</p>
+                </li>
+              ))}
+              {detail.projects.length === 0 && (
+                <p className="text-sm text-muted-foreground">No projects.</p>
+              )}
+            </ul>
+          )}
+
+          {tab === 'plan' && (
             <div className="space-y-4">
-              {detail.plan && (
+              {currentPlan && (
                 <div className="rounded-md border p-4">
-                  <p className="mb-1 text-sm font-medium">{detail.plan.name}</p>
+                  <p className="mb-1 text-sm font-medium">{currentPlan.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatPrice(detail.plan.priceMonthly)} / month
+                    {formatPrice(currentPlan.priceMonthly)} / month
+                    {currentPlan.priceYearly && ` · ${formatPrice(currentPlan.priceYearly)} / year`}
                   </p>
-                  {detail.plan.limits && (
+                  {Object.keys(currentPlan.limits).length > 0 && (
                     <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-                      {Object.entries(detail.plan.limits).map(([k, v]) => (
+                      {Object.entries(currentPlan.limits).map(([k, v]) => (
                         <li key={k} className="flex justify-between">
                           <span className="capitalize">{k}</span>
                           <span>{v ?? '∞'}</span>
@@ -172,20 +166,20 @@ export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailShee
                   <label className="mb-1 block text-xs font-medium">Change plan</label>
                   <div className="flex gap-2">
                     <select
-                      value={selectedPlan}
-                      onChange={(e) => setSelectedPlan(e.target.value)}
+                      value={selectedPlanKey}
+                      onChange={(e) => setSelectedPlanKey(e.target.value)}
                       className="h-9 flex-1 rounded-md border bg-background px-3 text-sm outline-none"
                     >
                       <option value="">Select plan…</option>
                       {plans.map((p) => (
-                        <option key={p.id} value={p.id}>
+                        <option key={p.id} value={p.key}>
                           {p.name}
                         </option>
                       ))}
                     </select>
                     <Button
                       size="sm"
-                      disabled={!selectedPlan || assignPlan.isPending}
+                      disabled={!selectedPlanKey || assignPlan.isPending}
                       onClick={handleAssignPlan}
                     >
                       Apply
@@ -196,38 +190,7 @@ export function WorkspaceDetailSheet({ workspace, onClose }: WorkspaceDetailShee
             </div>
           )}
         </div>
-
-        {canModerate && (
-          <div className="border-t px-5 py-4">
-            <Button
-              variant={isSuspended ? 'outline' : 'destructive'}
-              size="sm"
-              onClick={() => setDialog(isSuspended ? 'reactivate' : 'suspend')}
-            >
-              {isSuspended ? 'Reactivate workspace' : 'Suspend workspace'}
-            </Button>
-          </div>
-        )}
       </div>
-
-      <ConfirmDialog
-        open={dialog === 'suspend'}
-        title="Suspend workspace"
-        description={`Suspend "${workspace.name}"? Members will lose access.`}
-        confirmLabel="Suspend"
-        destructive
-        reasonLabel="Reason (required)"
-        onConfirm={handleSuspend}
-        onCancel={() => setDialog(null)}
-      />
-      <ConfirmDialog
-        open={dialog === 'reactivate'}
-        title="Reactivate workspace"
-        description={`Reactivate "${workspace.name}"? Members will regain access.`}
-        confirmLabel="Reactivate"
-        onConfirm={handleSuspend}
-        onCancel={() => setDialog(null)}
-      />
     </>
   )
 }

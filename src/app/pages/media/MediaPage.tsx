@@ -13,36 +13,35 @@ import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { StorageBar } from '@/app/pages/workspaces/components/StorageBar'
 import { formatBytes, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import type { MediaAsset, MediaKind } from '@/lib/types'
+import type { AdminMediaRow } from '@/lib/types'
 import { useMediaAssets, useWorkspaceStorage, usePurgeMedia } from './queries'
 
 const LIMIT = 20
-const KIND_LABEL: Record<MediaKind, string> = { image: 'Image', video: 'Video', file: 'File' }
 
 export function MediaPage() {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
-  const [kind, setKind] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [toPurge, setToPurge] = useState<MediaAsset | null>(null)
+  const [toPurge, setToPurge] = useState<AdminMediaRow | null>(null)
 
-  const { data, isLoading } = useMediaAssets({ page, limit: LIMIT, kind: kind || undefined })
+  const { data, isLoading } = useMediaAssets({ page, limit: LIMIT })
   const { data: storage } = useWorkspaceStorage()
   const purge = usePurgeMedia()
 
   const canModerate = role === 'admin' || role === 'moderator'
 
-  const columns: ColumnDef<MediaAsset>[] = [
+  const columns: ColumnDef<AdminMediaRow>[] = [
     {
-      accessorKey: 'key',
+      accessorKey: 'originalFilename',
       header: 'File',
       cell: ({ row }) => (
         <div>
-          <p className="max-w-xs truncate font-mono text-xs">{row.original.key}</p>
-          <p className="text-xs text-muted-foreground">{row.original.workspaceName}</p>
+          <p className="max-w-xs truncate font-mono text-xs">
+            {row.original.originalFilename ?? row.original.id}
+          </p>
+          <p className="text-xs text-muted-foreground">{row.original.mime ?? row.original.kind}</p>
         </div>
       ),
     },
@@ -50,15 +49,16 @@ export function MediaPage() {
       accessorKey: 'kind',
       header: 'Kind',
       cell: ({ getValue }) => (
-        <Badge variant="outline">{KIND_LABEL[getValue<MediaKind>()]}</Badge>
+        <Badge variant="outline" className="capitalize">{getValue<string>()}</Badge>
       ),
     },
     {
       accessorKey: 'sizeBytes',
       header: 'Size',
-      cell: ({ getValue }) => (
-        <span className="tabular-nums">{formatBytes(getValue<number>())}</span>
-      ),
+      cell: ({ getValue }) => {
+        const v = getValue<number | null>()
+        return <span className="tabular-nums">{v != null ? formatBytes(v) : '—'}</span>
+      },
     },
     {
       accessorKey: 'createdAt',
@@ -71,7 +71,7 @@ export function MediaPage() {
       ? [
           {
             id: 'actions',
-            cell: ({ row }: { row: { original: MediaAsset } }) => (
+            cell: ({ row }: { row: { original: AdminMediaRow } }) => (
               <Button
                 variant="destructive"
                 size="xs"
@@ -80,7 +80,7 @@ export function MediaPage() {
                 Purge
               </Button>
             ),
-          } satisfies ColumnDef<MediaAsset>,
+          } satisfies ColumnDef<AdminMediaRow>,
         ]
       : []),
   ]
@@ -95,9 +95,9 @@ export function MediaPage() {
     manualSorting: true,
   })
 
-  async function handlePurge(reason?: string) {
-    if (!toPurge || !reason) return
-    await purge.mutateAsync({ id: toPurge.id, reason })
+  async function handlePurge() {
+    if (!toPurge) return
+    await purge.mutateAsync(toPurge.id)
     toast.success('File purged.')
     setToPurge(null)
   }
@@ -109,40 +109,24 @@ export function MediaPage() {
       {storage && storage.length > 0 && (
         <div className="rounded-lg border bg-card p-4">
           <p className="mb-3 text-sm font-medium">Storage by workspace</p>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {storage
-              .sort((a, b) => b.usedBytes - a.usedBytes)
+              .sort((a, b) => b.totalBytes - a.totalBytes)
               .slice(0, 8)
               .map((ws) => (
-                <div key={ws.workspaceId} className="flex items-center gap-4">
-                  <span className="w-40 truncate text-xs">{ws.workspaceName}</span>
-                  <div className="flex-1">
-                    <StorageBar
-                      usedMb={ws.usedBytes / 1024 / 1024}
-                      capMb={ws.capBytes / 1024 / 1024}
-                    />
-                  </div>
-                  <span className="w-16 text-right text-xs text-muted-foreground">
-                    {ws.fileCount} files
+                <div key={ws.workspaceId} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="font-mono text-xs text-muted-foreground truncate max-w-[200px]">
+                    {ws.workspaceId}
                   </span>
+                  <span className="tabular-nums">{formatBytes(ws.totalBytes)}</span>
+                  <span className="text-xs text-muted-foreground">{ws.assetCount} files</span>
                 </div>
               ))}
           </div>
         </div>
       )}
 
-      <FilterBar value="" onChange={() => {}} placeholder="Filter by workspace…">
-        <select
-          value={kind}
-          onChange={(e) => { setKind(e.target.value); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
-        >
-          <option value="">All types</option>
-          <option value="image">Images</option>
-          <option value="video">Videos</option>
-          <option value="file">Files</option>
-        </select>
-      </FilterBar>
+      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
 
       <DataTable
         table={table}
@@ -156,10 +140,9 @@ export function MediaPage() {
       <ConfirmDialog
         open={Boolean(toPurge)}
         title="Purge file"
-        description={`Permanently delete "${toPurge?.key}" from R2 storage. Cannot be undone.`}
+        description={`Permanently delete "${toPurge?.originalFilename ?? toPurge?.id}" from storage. Cannot be undone.`}
         confirmLabel="Purge"
         destructive
-        reasonLabel="Reason (required)"
         onConfirm={handlePurge}
         onCancel={() => setToPurge(null)}
       />

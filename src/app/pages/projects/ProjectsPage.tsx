@@ -10,11 +10,12 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { DataTable } from '@/components/data-table/DataTable'
 import { FilterBar } from '@/components/data-table/FilterBar'
 import { Pagination } from '@/components/data-table/Pagination'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import type { ProjectRow } from '@/lib/types'
+import type { AdminProjectRow } from '@/lib/types'
 import { useProjects, useDeleteProject } from './queries'
 
 const LIMIT = 20
@@ -24,45 +25,42 @@ export function ProjectsPage() {
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [toDelete, setToDelete] = useState<ProjectRow | null>(null)
+  const [toDelete, setToDelete] = useState<AdminProjectRow | null>(null)
 
   const { data, isLoading } = useProjects({ page, limit: LIMIT, q: q || undefined })
   const deleteProject = useDeleteProject()
 
   const canDelete = role === 'admin'
 
-  const columns: ColumnDef<ProjectRow>[] = [
+  const columns: ColumnDef<AdminProjectRow>[] = [
     {
       accessorKey: 'name',
       header: 'Project',
       cell: ({ row }) => (
         <div>
-          <p className="font-medium">{row.original.name}</p>
-          <p className="text-xs text-muted-foreground">{row.original.workspaceName}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{row.original.name}</p>
+            {row.original.deleted && <Badge variant="error">Deleted</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground">/{row.original.slug}</p>
         </div>
       ),
     },
     {
-      accessorKey: 'createdByEmail',
-      header: 'Created by',
+      accessorKey: 'workspaceName',
+      header: 'Workspace',
       cell: ({ getValue }) => (
-        <span className="text-sm text-muted-foreground">{getValue<string>()}</span>
+        <span className="text-sm text-muted-foreground">{getValue<string | null>() ?? '—'}</span>
       ),
     },
     {
-      accessorKey: 'typeCount',
-      header: 'Types',
-      cell: ({ getValue }) => <span className="tabular-nums">{getValue<number>()}</span>,
-    },
-    {
-      accessorKey: 'entryCount',
-      header: 'Entries',
-      cell: ({ getValue }) => <span className="tabular-nums">{getValue<number>()}</span>,
-    },
-    {
-      accessorKey: 'keyCount',
-      header: 'API Keys',
-      cell: ({ getValue }) => <span className="tabular-nums">{getValue<number>()}</span>,
+      accessorKey: 'createdBy',
+      header: 'Created by',
+      cell: ({ getValue }) => (
+        <span className="font-mono text-xs text-muted-foreground truncate max-w-[120px] block">
+          {getValue<string>()}
+        </span>
+      ),
     },
     {
       accessorKey: 'createdAt',
@@ -75,16 +73,17 @@ export function ProjectsPage() {
       ? [
           {
             id: 'actions',
-            cell: ({ row }: { row: { original: ProjectRow } }) => (
-              <Button
-                variant="destructive"
-                size="xs"
-                onClick={() => setToDelete(row.original)}
-              >
-                Delete
-              </Button>
-            ),
-          } satisfies ColumnDef<ProjectRow>,
+            cell: ({ row }: { row: { original: AdminProjectRow } }) =>
+              !row.original.deleted ? (
+                <Button
+                  variant="destructive"
+                  size="xs"
+                  onClick={() => setToDelete(row.original)}
+                >
+                  Delete
+                </Button>
+              ) : null,
+          } satisfies ColumnDef<AdminProjectRow>,
         ]
       : []),
   ]
@@ -99,9 +98,9 @@ export function ProjectsPage() {
     manualSorting: true,
   })
 
-  async function handleDelete(reason?: string) {
-    if (!toDelete || !reason) return
-    await deleteProject.mutateAsync({ id: toDelete.id, reason })
+  async function handleDelete() {
+    if (!toDelete) return
+    await deleteProject.mutateAsync(toDelete.id)
     toast.success('Project deleted.')
     setToDelete(null)
   }
@@ -132,7 +131,6 @@ export function ProjectsPage() {
         confirmLabel="Delete"
         destructive
         requireTyping={toDelete?.name}
-        reasonLabel="Reason (required)"
         onConfirm={handleDelete}
         onCancel={() => setToDelete(null)}
       />

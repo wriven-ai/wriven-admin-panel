@@ -1,4 +1,4 @@
-import { Plus, RotateCcw, UserX } from 'lucide-react'
+import { Plus, UserX } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,12 +10,13 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatDate, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import type { AdminUser, AdminRole } from '@/lib/types'
+import type { AdminView, AdminRole } from '@/lib/types'
 import { useAdmins, useInviteAdmin, useUpdateAdmin, useDeleteAdmin } from './queries'
 
 const inviteSchema = z.object({
   email: z.email(),
   name: z.string().min(1),
+  password: z.string().min(8, 'Min 8 characters'),
   role: z.enum(['admin', 'moderator', 'member']),
 })
 
@@ -30,9 +31,11 @@ const ROLE_VARIANT: Record<AdminRole, 'default' | 'secondary' | 'outline'> = {
 export function AdminsPage() {
   const me = useAdminStore((s) => s.me)
   const [showInvite, setShowInvite] = useState(false)
-  const [toDelete, setToDelete] = useState<AdminUser | null>(null)
+  const [toDelete, setToDelete] = useState<AdminView | null>(null)
 
-  const { data: admins, isLoading } = useAdmins()
+  const { data, isLoading } = useAdmins()
+  const admins = data?.items ?? []
+
   const invite = useInviteAdmin()
   const update = useUpdateAdmin()
   const deleteAdmin = useDeleteAdmin()
@@ -54,12 +57,7 @@ export function AdminsPage() {
     setShowInvite(false)
   }
 
-  async function handleResetMfa(admin: AdminUser) {
-    await update.mutateAsync({ id: admin.id, resetMfa: true })
-    toast.success('MFA reset.')
-  }
-
-  async function handleToggleActive(admin: AdminUser) {
+  async function handleToggleActive(admin: AdminView) {
     await update.mutateAsync({ id: admin.id, active: !admin.active })
     toast.success(admin.active ? 'Admin deactivated.' : 'Admin reactivated.')
   }
@@ -71,8 +69,8 @@ export function AdminsPage() {
     setToDelete(null)
   }
 
-  const activeAdmins = admins?.filter((a) => a.active && a.role === 'admin') ?? []
-  const isLastAdmin = (admin: AdminUser) =>
+  const activeAdmins = admins.filter((a) => a.active && a.role === 'admin')
+  const isLastAdmin = (admin: AdminView) =>
     admin.role === 'admin' && admin.active && activeAdmins.length <= 1
 
   return (
@@ -94,7 +92,7 @@ export function AdminsPage() {
           className="rounded-lg border bg-card p-4"
         >
           <p className="mb-3 text-sm font-medium">Invite new admin</p>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <input
                 {...register('email')}
@@ -110,6 +108,15 @@ export function AdminsPage() {
                 className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
               />
             </div>
+            <div>
+              <input
+                {...register('password')}
+                type="password"
+                placeholder="Password (min 8 chars)"
+                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+              />
+              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+            </div>
             <select
               {...register('role')}
               className="h-9 rounded-md border bg-background px-3 text-sm outline-none"
@@ -124,7 +131,7 @@ export function AdminsPage() {
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
-              Send invite
+              Create admin
             </Button>
           </div>
         </form>
@@ -139,7 +146,7 @@ export function AdminsPage() {
       )}
 
       <div className="space-y-2">
-        {admins?.map((admin) => (
+        {admins.map((admin) => (
           <div
             key={admin.id}
             className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3"
@@ -147,54 +154,41 @@ export function AdminsPage() {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase">
               {admin.name[0]}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{admin.name}</p>
-                {admin.id === me?.adminUserId && (
+                {admin.id === me?.id && (
                   <Badge variant="outline" className="text-xs">You</Badge>
                 )}
                 <Badge variant={ROLE_VARIANT[admin.role]} className="capitalize">{admin.role}</Badge>
                 {!admin.active && <Badge variant="error">Inactive</Badge>}
-                {admin.mfaEnabled && <Badge variant="success">MFA</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">
                 {admin.email} · Joined {formatDate(admin.createdAt)}
                 {admin.lastLoginAt && ` · Last login ${formatRelative(admin.lastLoginAt)}`}
               </p>
             </div>
-            <div className="flex shrink-0 gap-1">
-              {admin.mfaEnabled && (
+            {admin.id !== me?.id && (
+              <div className="flex shrink-0 gap-1">
                 <Button
                   variant="ghost"
-                  size="icon-sm"
-                  title="Reset MFA"
-                  onClick={() => handleResetMfa(admin)}
+                  size="sm"
+                  onClick={() => handleToggleActive(admin)}
+                  disabled={isLastAdmin(admin)}
+                  title={isLastAdmin(admin) ? 'Cannot deactivate last admin' : undefined}
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  {admin.active ? 'Deactivate' : 'Reactivate'}
                 </Button>
-              )}
-              {admin.id !== me?.adminUserId && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleToggleActive(admin)}
-                    disabled={isLastAdmin(admin)}
-                    title={isLastAdmin(admin) ? 'Cannot deactivate last admin' : undefined}
-                  >
-                    {admin.active ? 'Deactivate' : 'Reactivate'}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    disabled={isLastAdmin(admin)}
-                    onClick={() => setToDelete(admin)}
-                  >
-                    <UserX className="h-3.5 w-3.5" />
-                  </Button>
-                </>
-              )}
-            </div>
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  disabled={isLastAdmin(admin)}
+                  onClick={() => setToDelete(admin)}
+                >
+                  <UserX className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>

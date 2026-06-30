@@ -15,65 +15,45 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import type { ApiKeyRow, ApiKeyScope } from '@/lib/types'
+import type { AdminApiKeyRow } from '@/lib/types'
 import { useApiKeys, useRevokeApiKey } from './queries'
 
 const LIMIT = 20
-const SCOPE_VARIANT: Record<ApiKeyScope, 'default' | 'secondary' | 'outline'> = {
-  manage: 'default',
-  preview: 'secondary',
-  read: 'outline',
-}
 
 export function ApiKeysPage() {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
-  const [revoked, setRevoked] = useState<boolean | undefined>()
-  const [scope, setScope] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [toRevoke, setToRevoke] = useState<ApiKeyRow | null>(null)
+  const [toRevoke, setToRevoke] = useState<AdminApiKeyRow | null>(null)
 
-  const { data, isLoading } = useApiKeys({
-    page,
-    limit: LIMIT,
-    revoked,
-    scope: scope || undefined,
-  })
+  const { data, isLoading } = useApiKeys({ page, limit: LIMIT })
 
   const revokeKey = useRevokeApiKey()
   const canModerate = role === 'admin' || role === 'moderator'
 
-  const columns: ColumnDef<ApiKeyRow>[] = [
+  const columns: ColumnDef<AdminApiKeyRow>[] = [
     {
       accessorKey: 'prefix',
       header: 'Key',
       cell: ({ row }) => (
         <div>
           <p className="font-mono text-xs">{row.original.prefix}…</p>
-          <p className="text-xs text-muted-foreground">{row.original.workspaceName}</p>
+          <p className="text-xs text-muted-foreground">{row.original.name}</p>
         </div>
       ),
     },
     {
       accessorKey: 'scope',
       header: 'Scope',
-      cell: ({ getValue }) => {
-        const s = getValue<ApiKeyScope>()
-        return <Badge variant={SCOPE_VARIANT[s]} className="capitalize">{s}</Badge>
-      },
-    },
-    {
-      accessorKey: 'projectName',
-      header: 'Project',
       cell: ({ getValue }) => (
-        <span className="text-sm text-muted-foreground">{getValue<string>()}</span>
+        <Badge variant="outline" className="capitalize">{getValue<string>()}</Badge>
       ),
     },
     {
-      accessorKey: 'revoked',
+      accessorKey: 'revokedAt',
       header: 'Status',
       cell: ({ getValue }) =>
-        getValue<boolean>() ? (
+        getValue<string | null>() !== null ? (
           <Badge variant="error">Revoked</Badge>
         ) : (
           <Badge variant="success">Active</Badge>
@@ -95,8 +75,8 @@ export function ApiKeysPage() {
       ? [
           {
             id: 'actions',
-            cell: ({ row }: { row: { original: ApiKeyRow } }) =>
-              !row.original.revoked ? (
+            cell: ({ row }: { row: { original: AdminApiKeyRow } }) =>
+              row.original.revokedAt === null ? (
                 <Button
                   variant="destructive"
                   size="xs"
@@ -105,7 +85,7 @@ export function ApiKeysPage() {
                   Revoke
                 </Button>
               ) : null,
-          } satisfies ColumnDef<ApiKeyRow>,
+          } satisfies ColumnDef<AdminApiKeyRow>,
         ]
       : []),
   ]
@@ -120,9 +100,9 @@ export function ApiKeysPage() {
     manualSorting: true,
   })
 
-  async function handleRevoke(reason?: string) {
-    if (!toRevoke || !reason) return
-    await revokeKey.mutateAsync({ id: toRevoke.id, reason })
+  async function handleRevoke() {
+    if (!toRevoke) return
+    await revokeKey.mutateAsync(toRevoke.id)
     toast.success('API key revoked.')
     setToRevoke(null)
   }
@@ -131,30 +111,7 @@ export function ApiKeysPage() {
     <div className="space-y-4">
       <PageHeader title="API Keys" description="Platform-wide key oversight. Raw tokens are never shown." />
 
-      <FilterBar value="" onChange={() => {}}>
-        <select
-          value={revoked === undefined ? '' : String(revoked)}
-          onChange={(e) => {
-            setRevoked(e.target.value === '' ? undefined : e.target.value === 'true')
-            setPage(1)
-          }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
-        >
-          <option value="">All keys</option>
-          <option value="false">Active</option>
-          <option value="true">Revoked</option>
-        </select>
-        <select
-          value={scope}
-          onChange={(e) => { setScope(e.target.value); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
-        >
-          <option value="">All scopes</option>
-          <option value="read">Read</option>
-          <option value="preview">Preview</option>
-          <option value="manage">Manage</option>
-        </select>
-      </FilterBar>
+      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
 
       <DataTable
         table={table}
@@ -168,10 +125,9 @@ export function ApiKeysPage() {
       <ConfirmDialog
         open={Boolean(toRevoke)}
         title="Revoke API key"
-        description={`Revoke key ${toRevoke?.prefix}…? Any requests using this key will fail immediately.`}
+        description={`Revoke key ${toRevoke?.prefix}…? Requests using this key will fail immediately.`}
         confirmLabel="Revoke"
         destructive
-        reasonLabel="Reason (required)"
         onConfirm={handleRevoke}
         onCancel={() => setToRevoke(null)}
       />

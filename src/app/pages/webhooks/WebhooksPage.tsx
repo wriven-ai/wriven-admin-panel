@@ -17,32 +17,27 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import { cn } from '@/lib/utils'
-import type { WebhookRow } from '@/lib/types'
+import type { AdminWebhookRow } from '@/lib/types'
 import { useWebhooks, useDisableWebhook } from './queries'
 
 const LIMIT = 20
 
-function isFailingWebhook(w: WebhookRow) {
-  return w.lastStatusCode !== null && (w.lastStatusCode < 200 || w.lastStatusCode >= 300)
+function isFailingWebhook(w: AdminWebhookRow) {
+  return w.lastStatus !== null && (w.lastStatus < 200 || w.lastStatus >= 300)
 }
 
 export function WebhooksPage() {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
-  const [failingOnly, setFailingOnly] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([])
-  const [toDisable, setToDisable] = useState<WebhookRow | null>(null)
+  const [toDisable, setToDisable] = useState<AdminWebhookRow | null>(null)
 
-  const { data, isLoading } = useWebhooks({
-    page,
-    limit: LIMIT,
-    failing: failingOnly || undefined,
-  })
+  const { data, isLoading } = useWebhooks({ page, limit: LIMIT })
 
   const disable = useDisableWebhook()
   const canModerate = role === 'admin' || role === 'moderator'
 
-  const columns: ColumnDef<WebhookRow>[] = [
+  const columns: ColumnDef<AdminWebhookRow>[] = [
     {
       accessorKey: 'url',
       header: 'URL',
@@ -53,16 +48,9 @@ export function WebhooksPage() {
           )}
           <div className="min-w-0">
             <p className="max-w-xs truncate text-xs font-mono">{row.original.url}</p>
-            <p className="text-xs text-muted-foreground">{row.original.workspaceName}</p>
+            <p className="text-xs text-muted-foreground">{row.original.events.join(', ')}</p>
           </div>
         </div>
-      ),
-    },
-    {
-      accessorKey: 'projectName',
-      header: 'Project',
-      cell: ({ getValue }) => (
-        <span className="text-sm text-muted-foreground">{getValue<string>()}</span>
       ),
     },
     {
@@ -80,7 +68,7 @@ export function WebhooksPage() {
       },
     },
     {
-      accessorKey: 'lastStatusCode',
+      accessorKey: 'lastStatus',
       header: 'Last code',
       cell: ({ getValue }) => {
         const code = getValue<number | null>()
@@ -105,7 +93,7 @@ export function WebhooksPage() {
       ? [
           {
             id: 'actions',
-            cell: ({ row }: { row: { original: WebhookRow } }) =>
+            cell: ({ row }: { row: { original: AdminWebhookRow } }) =>
               row.original.active ? (
                 <Button
                   variant="destructive"
@@ -115,7 +103,7 @@ export function WebhooksPage() {
                   Disable
                 </Button>
               ) : null,
-          } satisfies ColumnDef<WebhookRow>,
+          } satisfies ColumnDef<AdminWebhookRow>,
         ]
       : []),
   ]
@@ -130,9 +118,9 @@ export function WebhooksPage() {
     manualSorting: true,
   })
 
-  async function handleDisable(reason?: string) {
-    if (!toDisable || !reason) return
-    await disable.mutateAsync({ id: toDisable.id, reason })
+  async function handleDisable() {
+    if (!toDisable) return
+    await disable.mutateAsync(toDisable.id)
     toast.success('Webhook disabled.')
     setToDisable(null)
   }
@@ -141,17 +129,7 @@ export function WebhooksPage() {
     <div className="space-y-4">
       <PageHeader title="Webhooks" description="Platform-wide webhook subscriptions." />
 
-      <FilterBar value="" onChange={() => {}}>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={failingOnly}
-            onChange={(e) => { setFailingOnly(e.target.checked); setPage(1) }}
-            className="rounded border-border"
-          />
-          Failing only
-        </label>
-      </FilterBar>
+      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
 
       <DataTable
         table={table}
@@ -165,10 +143,9 @@ export function WebhooksPage() {
       <ConfirmDialog
         open={Boolean(toDisable)}
         title="Disable webhook"
-        description={`Disable webhook for "${toDisable?.url}"? No further events will be delivered.`}
+        description={`Disable webhook "${toDisable?.url}"? No further events will be delivered.`}
         confirmLabel="Disable"
         destructive
-        reasonLabel="Reason (required)"
         onConfirm={handleDisable}
         onCancel={() => setToDisable(null)}
       />

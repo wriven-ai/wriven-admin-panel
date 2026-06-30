@@ -2,13 +2,13 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
-import type { Paginated, MediaAsset, WorkspaceStorageRow } from '@/lib/types'
+import type { Paginated, AdminMediaRow, AdminMediaUsageRow } from '@/lib/types'
 
 interface MediaListParams {
   page: number
   limit: number
   workspaceId?: string
-  kind?: string
+  projectId?: string
 }
 
 export function useMediaAssets(params: MediaListParams) {
@@ -16,26 +16,25 @@ export function useMediaAssets(params: MediaListParams) {
     page: String(params.page),
     limit: String(params.limit),
     ...(params.workspaceId ? { workspaceId: params.workspaceId } : {}),
-    ...(params.kind ? { kind: params.kind } : {}),
+    ...(params.projectId ? { projectId: params.projectId } : {}),
   })
 
   return useQuery({
     queryKey: qk.media.list(params as Record<string, unknown>),
-    queryFn: () => api.get<Paginated<MediaAsset>>(`/admin/media?${sp}`),
+    queryFn: () => api.get<Paginated<AdminMediaRow>>(`/admin/media?${sp}`),
   })
 }
 
 export function useWorkspaceStorage() {
   return useQuery({
     queryKey: ['media', 'workspace-storage'],
-    queryFn: () => api.get<WorkspaceStorageRow[]>('/admin/media/usage'),
+    queryFn: () => api.get<AdminMediaUsageRow[]>('/admin/media/usage'),
   })
 }
 
 export function usePurgeMedia() {
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      api.del(`/admin/media/${id}`, { reason }),
+    mutationFn: (id: string) => api.del(`/admin/media/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] }),
   })
 }

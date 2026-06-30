@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
-import type { ContentEntryRow } from '@/lib/types'
+import type { AdminEntryRow } from '@/lib/types'
 import { useContent, useTakedownContent } from './queries'
 
 const LIMIT = 20
@@ -29,46 +29,37 @@ const STATUS_VARIANT = {
 export function ContentPage() {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
-  const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [toTakedown, setToTakedown] = useState<ContentEntryRow | null>(null)
+  const [toTakedown, setToTakedown] = useState<AdminEntryRow | null>(null)
 
   const { data, isLoading } = useContent({
     page,
     limit: LIMIT,
-    q: q || undefined,
     status: status || undefined,
   })
 
   const takedown = useTakedownContent()
   const canModerate = role === 'admin' || role === 'moderator'
 
-  const columns: ColumnDef<ContentEntryRow>[] = [
+  const columns: ColumnDef<AdminEntryRow>[] = [
     {
-      accessorKey: 'title',
-      header: 'Title',
+      accessorKey: 'slug',
+      header: 'Entry',
       cell: ({ row }) => (
         <div>
-          <p className="font-medium">{row.original.title}</p>
-          <p className="text-xs text-muted-foreground">{row.original.slug}</p>
+          <p className="font-mono text-xs font-medium">{row.original.slug}</p>
+          <p className="text-xs text-muted-foreground">type: {row.original.contentTypeId}</p>
         </div>
       ),
     },
     {
-      accessorKey: 'type',
-      header: 'Type',
-      cell: ({ getValue }) => (
-        <Badge variant="outline">{getValue<string>()}</Badge>
-      ),
-    },
-    {
-      accessorKey: 'workspaceName',
+      accessorKey: 'workspaceId',
       header: 'Workspace',
       cell: ({ row }) => (
         <div>
-          <p className="text-sm">{row.original.workspaceName}</p>
-          <p className="text-xs text-muted-foreground">{row.original.projectName}</p>
+          <p className="font-mono text-xs">{row.original.workspaceId}</p>
+          <p className="text-xs text-muted-foreground">{row.original.projectId}</p>
         </div>
       ),
     },
@@ -91,7 +82,7 @@ export function ContentPage() {
       ? [
           {
             id: 'actions',
-            cell: ({ row }: { row: { original: ContentEntryRow } }) =>
+            cell: ({ row }: { row: { original: AdminEntryRow } }) =>
               row.original.status !== 'archived' ? (
                 <Button
                   variant="destructive"
@@ -101,7 +92,7 @@ export function ContentPage() {
                   Takedown
                 </Button>
               ) : null,
-          } satisfies ColumnDef<ContentEntryRow>,
+          } satisfies ColumnDef<AdminEntryRow>,
         ]
       : []),
   ]
@@ -116,9 +107,9 @@ export function ContentPage() {
     manualSorting: true,
   })
 
-  async function handleTakedown(reason?: string) {
-    if (!toTakedown || !reason) return
-    await takedown.mutateAsync({ id: toTakedown.id, reason })
+  async function handleTakedown() {
+    if (!toTakedown) return
+    await takedown.mutateAsync(toTakedown.id)
     toast.success('Entry taken down.')
     setToTakedown(null)
   }
@@ -127,11 +118,7 @@ export function ContentPage() {
     <div className="space-y-4">
       <PageHeader title="Content" description="Global content moderation browser." />
 
-      <FilterBar
-        value={q}
-        onChange={(v) => { setQ(v); setPage(1) }}
-        placeholder="Search by title or slug…"
-      >
+      <FilterBar value="" onChange={() => {}}>
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}
@@ -156,10 +143,9 @@ export function ContentPage() {
       <ConfirmDialog
         open={Boolean(toTakedown)}
         title="Take down entry"
-        description={`Archive "${toTakedown?.title}" and remove it from public access.`}
+        description={`Archive "${toTakedown?.slug}"? Entry will be removed from public access.`}
         confirmLabel="Take down"
         destructive
-        reasonLabel="Reason (required, stored in audit log)"
         onConfirm={handleTakedown}
         onCancel={() => setToTakedown(null)}
       />

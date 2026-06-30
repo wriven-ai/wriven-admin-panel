@@ -1,12 +1,5 @@
 export type AdminRole = 'admin' | 'moderator' | 'member'
 
-export interface AdminMe {
-  adminUserId: string
-  email: string
-  name: string
-  role: AdminRole
-}
-
 export interface Paginated<T> {
   items: T[]
   page: number
@@ -14,196 +7,200 @@ export interface Paginated<T> {
   total: number
 }
 
-export interface PlanLimits {
-  projects?: number
-  members?: number
-  storageMb?: number
-  entries?: number
-  apiKeys?: number
-  webhooks?: number
-}
-
-export interface Plan {
-  id: string
-  key: string
-  name: string
-  limits: PlanLimits
-  priceMonthly: number | null
-  active: boolean
-  createdAt: string
-}
-
-export type WorkspacePlanStatus = 'active' | 'past_due' | 'suspended' | 'trialing'
-
-export interface AdminUser {
+// ── Admin identity (platform staff) ──────────────────────────────────────────
+export interface AdminView {
   id: string
   email: string
   name: string
   role: AdminRole
   active: boolean
-  mfaEnabled: boolean
   lastLoginAt: string | null
   createdAt: string
 }
 
-export type AuditTargetType =
-  | 'user'
-  | 'workspace'
-  | 'project'
-  | 'entry'
-  | 'api_key'
-  | 'webhook'
-  | 'admin_user'
-  | 'plan'
-
-export interface AuditEvent {
-  id: string
-  adminUserId: string
-  adminEmail: string
-  action: string
-  targetType: AuditTargetType | null
-  targetId: string | null
-  metadata: Record<string, unknown>
-  ip: string | null
-  createdAt: string
+export interface AdminMeResponse extends AdminView {
+  csrfToken: string | null
 }
 
-export interface TenantUser {
+// ── Tenant users ──────────────────────────────────────────────────────────────
+export interface AdminUserRow {
   id: string
   email: string
   name: string
-  provider: 'local' | 'google'
+  provider: string
   emailVerified: boolean
   suspended: boolean
   workspaceCount: number
   createdAt: string
 }
 
-export interface UserMembership {
-  workspaceId: string
-  workspaceName: string
-  role: string
+export interface AdminUserDetail extends AdminUserRow {
+  workspaces: { id: string; name: string; slug: string; role: string }[]
+  projects: { id: string; name: string; workspaceId: string; role: string }[]
 }
 
-export interface UserDetail extends TenantUser {
-  memberships: UserMembership[]
-}
-
-export interface WorkspaceRow {
+// ── Workspaces ────────────────────────────────────────────────────────────────
+export interface AdminWorkspaceRow {
   id: string
   name: string
   slug: string
-  ownerEmail: string
+  ownerId: string
+  ownerEmail: string | null
   memberCount: number
   projectCount: number
-  storageUsedMb: number
-  planKey: string
-  status: WorkspacePlanStatus
+  planKey: string | null
+  planName: string | null
+  subscriptionStatus: string | null
   createdAt: string
 }
 
-export interface WorkspaceMember {
-  userId: string
-  email: string
-  name: string
-  role: string
+export interface AdminWorkspaceDetail extends AdminWorkspaceRow {
+  members: { userId: string; email: string; name: string; role: string }[]
+  projects: { id: string; name: string; slug: string }[]
 }
 
-export interface WorkspaceDetail extends WorkspaceRow {
-  members: WorkspaceMember[]
-  plan: Plan | null
-  overrides: PlanLimits | null
-}
-
-export interface ProjectRow {
+// ── Projects ──────────────────────────────────────────────────────────────────
+export interface AdminProjectRow {
   id: string
   name: string
-  workspaceId: string
-  workspaceName: string
-  typeCount: number
-  entryCount: number
-  keyCount: number
-  webhookCount: number
-  createdByEmail: string
-  status: string
-  createdAt: string
-}
-
-export interface ContentEntryRow {
-  id: string
-  title: string
   slug: string
-  type: string
   workspaceId: string
-  workspaceName: string
+  workspaceName: string | null
+  createdBy: string
+  deleted: boolean
+  createdAt: string
+}
+
+// ── Content ───────────────────────────────────────────────────────────────────
+export interface AdminEntryRow {
+  id: string
+  workspaceId: string
   projectId: string
-  projectName: string
+  contentTypeId: string
+  slug: string
   status: 'draft' | 'published' | 'archived'
+  authorId: string
+  publishedAt: string | null
+  createdAt: string
   updatedAt: string
 }
 
-export type MediaKind = 'image' | 'video' | 'file'
-
-export interface WorkspaceStorageRow {
-  workspaceId: string
-  workspaceName: string
-  usedBytes: number
-  capBytes: number
-  fileCount: number
+export interface AdminEntryDetail extends AdminEntryRow {
+  data: Record<string, unknown>
 }
 
-export interface MediaAsset {
+// ── Media ─────────────────────────────────────────────────────────────────────
+export interface AdminMediaRow {
   id: string
   workspaceId: string
-  workspaceName: string
-  kind: MediaKind
-  sizeBytes: number
-  key: string
-  createdAt: string
-}
-
-export interface MediaTotals {
-  totalBytes: number
-  byKind: Record<MediaKind, number>
-}
-
-export type ApiKeyScope = 'read' | 'preview' | 'manage'
-
-export interface ApiKeyRow {
-  id: string
-  prefix: string
-  scope: ApiKeyScope
   projectId: string
-  projectName: string
-  workspaceName: string
-  lastUsedAt: string | null
+  kind: string
+  mime: string | null
+  sizeBytes: number | null
+  originalFilename: string | null
+  uploadedBy: string
   createdAt: string
-  revoked: boolean
 }
 
-export interface WebhookRow {
+export interface AdminMediaUsageRow {
+  workspaceId: string
+  assetCount: number
+  totalBytes: number
+}
+
+// ── API Keys ──────────────────────────────────────────────────────────────────
+export interface AdminApiKeyRow {
   id: string
+  workspaceId: string
+  projectId: string
+  name: string
+  prefix: string
+  scope: string
+  lastUsedAt: string | null
+  revokedAt: string | null
+  createdAt: string
+}
+
+// ── Webhooks ──────────────────────────────────────────────────────────────────
+export interface AdminWebhookRow {
+  id: string
+  workspaceId: string
+  projectId: string
   url: string
   events: string[]
-  projectId: string
-  projectName: string
-  workspaceName: string
-  lastStatusCode: number | null
-  lastFiredAt: string | null
   active: boolean
+  lastStatus: number | null
+  lastFiredAt: string | null
+  createdAt: string
 }
 
-export interface OverviewMetrics {
-  totals: {
-    users: number
-    workspaces: number
-    projects: number
-    entries: number
-    storageBytes: number
-    activePlans: number
-  }
-  growth: Array<{ date: string; users: number; workspaces: number }>
-  planBreakdown: Array<{ planKey: string; planName: string; count: number }>
-  recentAudit: AuditEvent[]
-  failingWebhooks: WebhookRow[]
+// ── Plans ─────────────────────────────────────────────────────────────────────
+export interface PlanLimits {
+  projects?: number | null
+  members?: number | null
+  environments?: number | null
+  contentTypes?: number | null
+  entries?: number | null
+  locales?: number | null
+  storageMb?: number | null
+  assetBandwidthGb?: number | null
+  apiRequestsPerMonth?: number | null
+  apiKeys?: number | null
+  webhooks?: number | null
+}
+
+export interface PlanFeatures {
+  scheduledPublishing?: boolean
+  revisionHistory?: boolean
+  customRoles?: boolean
+  sso?: boolean
+  auditLog?: boolean
+  previewApi?: boolean
+  supportTier?: 'community' | 'email' | 'priority'
+}
+
+export interface PlanView {
+  id: string
+  key: string
+  name: string
+  description: string | null
+  sortOrder: number
+  isPublic: boolean
+  active: boolean
+  priceMonthly: number | null
+  priceYearly: number | null
+  currency: string
+  trialDays: number
+  limits: PlanLimits
+  features: PlanFeatures
+}
+
+// ── Audit ─────────────────────────────────────────────────────────────────────
+export interface AuditLogView {
+  id: string
+  adminUserId: string
+  adminEmail: string | null
+  action: string
+  targetType: string | null
+  targetId: string | null
+  metadata: Record<string, unknown>
+  ip: string | null
+  createdAt: string
+}
+
+// ── Metrics ───────────────────────────────────────────────────────────────────
+export interface AdminMetricsOverview {
+  users: { total: number; verified: number }
+  workspaces: { total: number }
+  projects: { total: number }
+  content: { entries: number; published: number }
+  media: { totalBytes: number }
+  plans: { key: string; name: string; count: number }[]
+}
+
+// ── DTOs ──────────────────────────────────────────────────────────────────────
+export interface AssignPlanDto {
+  planKey: string
+  status?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'paused' | 'incomplete'
+  overrides?: Record<string, number | null>
 }

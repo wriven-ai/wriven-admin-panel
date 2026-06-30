@@ -1,12 +1,9 @@
-import { Users, Building2, FolderOpen, FileText, HardDrive, CheckCircle } from 'lucide-react'
+import { Users, Building2, FolderOpen, FileText, HardDrive, BarChart2 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { formatBytes, formatNumber } from '@/lib/format'
 import { useOverviewMetrics } from './queries'
 import { StatCard } from './components/StatCard'
-import { GrowthChart } from './components/GrowthChart'
 import { PlanBreakdown } from './components/PlanBreakdown'
-import { RecentAudit } from './components/RecentAudit'
-import { FailingWebhooks } from './components/FailingWebhooks'
 
 function StatsSkeleton() {
   return (
@@ -38,45 +35,43 @@ export function OverviewPage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <StatCard
               title="Users"
-              value={formatNumber(data.totals.users)}
+              value={formatNumber(data.users.total)}
               icon={Users}
+              description={`${formatNumber(data.users.verified)} verified`}
             />
             <StatCard
               title="Workspaces"
-              value={formatNumber(data.totals.workspaces)}
+              value={formatNumber(data.workspaces.total)}
               icon={Building2}
             />
             <StatCard
               title="Projects"
-              value={formatNumber(data.totals.projects)}
+              value={formatNumber(data.projects.total)}
               icon={FolderOpen}
             />
             <StatCard
               title="Entries"
-              value={formatNumber(data.totals.entries)}
+              value={formatNumber(data.content.entries)}
               icon={FileText}
+              description={`${formatNumber(data.content.published)} published`}
             />
             <StatCard
               title="Storage"
-              value={formatBytes(data.totals.storageBytes)}
+              value={formatBytes(data.media.totalBytes)}
               icon={HardDrive}
             />
             <StatCard
-              title="Active Plans"
-              value={formatNumber(data.totals.activePlans)}
-              icon={CheckCircle}
+              title="Plan types"
+              value={data.plans.length}
+              icon={BarChart2}
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <GrowthChart data={data.growth} />
-            <PlanBreakdown data={data.planBreakdown} />
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <RecentAudit events={data.recentAudit} />
-            <FailingWebhooks webhooks={data.failingWebhooks} />
-          </div>
+          {data.plans.length > 0 && (
+            <div className="max-w-md">
+              <PlanBreakdown data={data.plans} />
+            </div>
+          )}
         </>
       )}
     </div>
