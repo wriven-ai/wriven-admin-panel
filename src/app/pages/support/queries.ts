@@ -9,6 +9,7 @@ import type {
   AdminSupportMetrics,
   SupportStatus,
   SupportPriority,
+  SupportScope,
 } from '@/lib/types'
 
 interface TicketListParams {
@@ -17,7 +18,7 @@ interface TicketListParams {
   q?: string
   status?: SupportStatus
   priority?: SupportPriority
-  scope?: string
+  scope?: SupportScope
   workspaceId?: string
   assignee?: 'me' | 'unassigned' | string
 }

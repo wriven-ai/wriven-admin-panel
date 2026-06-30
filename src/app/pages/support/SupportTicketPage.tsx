@@ -20,8 +20,8 @@ export function SupportTicketPage() {
   const me = useAdminStore((s) => s.me)
   const canWrite = me?.role === 'admin' || me?.role === 'moderator'
 
-  const { data: ticket, isLoading } = useTicketDetail(id ?? '')
-  const { data: admins } = useAdmins()
+  const { data: ticket, isLoading, error: ticketError } = useTicketDetail(id ?? '')
+  const { data: admins, error: adminsError } = useAdmins()
   const reply = useReplyTicket()
   const update = useUpdateTicket()
 
@@ -41,6 +41,10 @@ export function SupportTicketPage() {
         ))}
       </div>
     )
+  }
+
+  if (ticketError) {
+    return <p className="text-sm text-destructive">Failed to load ticket.</p>
   }
 
   if (!ticket) {
@@ -73,7 +77,7 @@ export function SupportTicketPage() {
     }
   }
 
-  const adminList = admins?.items ?? []
+  const adminList = (admins?.items ?? []).filter((a) => a.active)
 
   return (
     <div className="flex flex-col gap-4">
@@ -124,12 +128,16 @@ export function SupportTicketPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Assignee</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              Assignee
+              {adminsError && <span className="ml-2 text-destructive">(failed to load)</span>}
+            </label>
             <div className="flex gap-2">
               <select
                 value={ticket.assignedAdminId ?? ''}
                 onChange={(e) => handleUpdate({ assignedAdminId: e.target.value || null })}
-                className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+                disabled={!!adminsError}
+                className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1 disabled:opacity-50"
               >
                 <option value="">Unassigned</option>
                 {adminList.map((a) => (

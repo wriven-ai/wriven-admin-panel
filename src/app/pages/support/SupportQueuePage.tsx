@@ -41,7 +41,7 @@ export function SupportQueuePage() {
   const [scope, setScope] = useState<SupportScope | ''>('')
   const [assignee, setAssignee] = useState('')
 
-  const { data, isLoading } = useTickets({
+  const { data, isLoading, error } = useTickets({
     page,
     limit: LIMIT,
     q: q || undefined,
@@ -139,6 +139,12 @@ export function SupportQueuePage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Support" description="Cross-tenant ticket queue." />
+
+      {error && (
+        <p className="text-sm text-destructive">
+          Failed to load tickets — {(error as Error).message}
+        </p>
+      )}
 
       {metrics && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 max-w-lg">
