@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from './button'
+import { Button } from './Button'
 
 interface ConfirmDialogProps {
   open: boolean
