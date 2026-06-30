@@ -1,37 +1,46 @@
 import { useEffect } from 'react'
-import { Outlet } from 'react-router'
-import { setCsrfToken } from '@/lib/api'
+import { Outlet, useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
+import { api, setCsrfToken } from '@/lib/api'
 import { useAdminStore } from '@/stores/admin'
+import type { AdminMeResponse } from '@/lib/types'
 
-// Mock auth — replace with real GET /admin/auth/me query when login is built
-// AdminView shape: id (not adminUserId), active, no mfaEnabled
-const MOCK_ADMIN = {
-  id: 'mock-admin-01',
-  email: 'admin@wriven.com',
-  name: 'Admin User',
-  role: 'admin' as const,
-  active: true,
-  lastLoginAt: null,
-  createdAt: new Date().toISOString(),
+function useMe() {
+  return useQuery({
+    queryKey: ['admin', 'me'],
+    queryFn: () => api.get<AdminMeResponse>('/admin/auth/me'),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
 }
 
 export function RequireAdmin() {
   const { me, setMe } = useAdminStore()
+  const navigate = useNavigate()
+  const { data, isLoading, isError } = useMe()
 
   useEffect(() => {
-    if (!me) {
-      setCsrfToken(null) // will be set from real /admin/auth/me response
-      setMe(MOCK_ADMIN)
+    if (data) {
+      setCsrfToken(data.csrfToken)
+      setMe(data)
     }
-  }, [me, setMe])
+  }, [data, setMe])
 
-  if (!me) {
+  useEffect(() => {
+    if (isError) {
+      navigate('/login', { replace: true })
+    }
+  }, [isError, navigate])
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <span className="text-sm text-muted-foreground">Loading…</span>
       </div>
     )
   }
+
+  if (!me) return null
 
   return <Outlet />
 }

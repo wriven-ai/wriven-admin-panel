@@ -3,6 +3,7 @@ import { AuthLayout } from '@/app/layout/AuthLayout'
 import { RequireAdmin } from '@/app/RequireAdmin'
 import { RequireRole } from '@/app/RequireRole'
 import { RootLayout } from '@/app/layout/RootLayout'
+import { LoginPage } from '@/app/pages/login/LoginPage'
 import { OverviewPage } from '@/app/pages/overview/OverviewPage'
 import { UsersPage } from '@/app/pages/users/UsersPage'
 import { WorkspacesPage } from '@/app/pages/workspaces/WorkspacesPage'
@@ -21,12 +22,7 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <AuthLayout />,
     children: [
-      {
-        index: true,
-        element: (
-          <div className="text-sm text-muted-foreground">Login — coming soon.</div>
-        ),
-      },
+      { index: true, element: <LoginPage /> },
     ],
   },
   {
