@@ -1,7 +1,8 @@
-import { Users, Building2, FolderOpen, FileText, HardDrive, BarChart2 } from 'lucide-react'
+import { Users, Building2, FolderOpen, FileText, HardDrive, BarChart2, LifeBuoy } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { formatBytes, formatNumber } from '@/lib/format'
 import { useOverviewMetrics } from './queries'
+import { useSupportMetrics } from '../support/queries'
 import { StatCard } from './components/StatCard'
 import { PlanBreakdown } from './components/PlanBreakdown'
 
@@ -17,6 +18,7 @@ function StatsSkeleton() {
 
 export function OverviewPage() {
   const { data, isLoading, error } = useOverviewMetrics()
+  const { data: supportMetrics } = useSupportMetrics()
 
   return (
     <div className="space-y-6">
@@ -65,6 +67,14 @@ export function OverviewPage() {
               value={data.plans.length}
               icon={BarChart2}
             />
+            {supportMetrics !== undefined && (
+              <StatCard
+                title="Open tickets"
+                value={formatNumber(supportMetrics.open)}
+                icon={LifeBuoy}
+                description={`${formatNumber(supportMetrics.unassigned)} unassigned`}
+              />
+            )}
           </div>
 
           {data.plans.length > 0 && (

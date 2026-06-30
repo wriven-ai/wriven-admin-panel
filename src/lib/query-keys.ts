@@ -38,4 +38,9 @@ export const qk = {
   audit: {
     list: (params: Record<string, unknown>) => ['audit', params] as const,
   },
+  support: {
+    list: (params: Record<string, unknown>) => ['support', params] as const,
+    detail: (id: string) => ['support', id] as const,
+    metrics: () => ['support', 'metrics'] as const,
+  },
 } as const

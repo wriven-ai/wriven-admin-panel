@@ -16,6 +16,8 @@ import { PlansPage } from '@/app/pages/plans/PlansPage'
 import { AdminsPage } from '@/app/pages/admins/AdminsPage'
 import { AuditPage } from '@/app/pages/audit/AuditPage'
 import { SettingsPage } from '@/app/pages/settings/SettingsPage'
+import { SupportQueuePage } from '@/app/pages/support/SupportQueuePage'
+import { SupportTicketPage } from '@/app/pages/support/SupportTicketPage'
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
           { path: 'workspaces', element: <WorkspacesPage /> },
           { path: 'projects', element: <ProjectsPage /> },
           { path: 'content', element: <ContentPage /> },
+          { path: 'support', element: <SupportQueuePage /> },
+          { path: 'support/:id', element: <SupportTicketPage /> },
           { path: 'media', element: <MediaPage /> },
           { path: 'api-keys', element: <ApiKeysPage /> },
           { path: 'webhooks', element: <WebhooksPage /> },

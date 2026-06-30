@@ -198,6 +198,59 @@ export interface AdminMetricsOverview {
   plans: { key: string; name: string; count: number }[]
 }
 
+// ── Support Tickets ───────────────────────────────────────────────────────────
+export type SupportStatus = 'open' | 'pending' | 'resolved' | 'closed'
+export type SupportPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type SupportScope = 'general' | 'project' | 'billing' | 'account' | 'technical'
+
+export interface AdminTicketAttachment {
+  id: string
+  url: string
+  mime: string | null
+  sizeBytes: number | null
+  originalFilename: string | null
+}
+
+export interface AdminTicketRow {
+  id: string
+  number: number
+  subject: string
+  workspaceName: string
+  authorEmail: string
+  scopeType: SupportScope
+  status: SupportStatus
+  priority: SupportPriority
+  assignedAdminId: string | null
+  assignedAdminName: string | null
+  lastReplyAt: string | null
+  lastReplyBy: 'user' | 'admin' | null
+  createdAt: string
+}
+
+export interface AdminTicketMessage {
+  id: string
+  authorType: 'user' | 'admin'
+  authorName: string
+  body: string
+  isInternalNote: boolean
+  createdAt: string
+  attachments: AdminTicketAttachment[]
+}
+
+export interface AdminTicketDetail extends AdminTicketRow {
+  description: string
+  workspaceId: string
+  authorId: string
+  attachments: AdminTicketAttachment[]
+  messages: AdminTicketMessage[]
+}
+
+export interface AdminSupportMetrics {
+  open: number
+  unassigned: number
+  awaitingCustomer: number
+}
+
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 export interface AssignPlanDto {
   planKey: string

@@ -10,12 +10,14 @@ interface DataTableProps<TData> {
   columns: ColumnDef<TData, unknown>[]
   isLoading?: boolean
   emptyMessage?: string
+  getRowClassName?: (row: { original: TData }) => string | undefined
 }
 
 export function DataTable<TData>({
   table,
   isLoading,
   emptyMessage = 'No results found.',
+  getRowClassName,
 }: DataTableProps<TData>) {
   const rows = table.getRowModel().rows
 
@@ -69,7 +71,7 @@ export function DataTable<TData>({
               rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="transition-colors hover:bg-muted/30"
+                  className={cn('transition-colors hover:bg-muted/30', getRowClassName?.(row))}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="whitespace-nowrap px-4 py-3">
