@@ -1,5 +1,5 @@
 import { Moon, Sun, LogOut, Search } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/Badge'
 import { useAdminStore } from '@/stores/admin'
 import { cn } from '@/lib/utils'
 import type { AdminRole } from '@/lib/types'

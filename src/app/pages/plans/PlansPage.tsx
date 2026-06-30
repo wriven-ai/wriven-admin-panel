@@ -1,13 +1,13 @@
 import { Plus, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/layout/page-header'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { formatPrice } from '@/lib/format'
 import type { Plan } from '@/lib/types'
 import { usePlans, useCreatePlan, useUpdatePlan } from './queries'
-import { PlanForm } from './components/plan-form'
+import { PlanForm } from './components/PlanForm'
 
 type Mode = { type: 'create' } | { type: 'edit'; plan: Plan } | null
 

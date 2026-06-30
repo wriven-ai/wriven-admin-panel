@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import type { Plan } from '@/lib/types'
 
 const schema = z.object({

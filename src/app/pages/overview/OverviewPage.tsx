@@ -1,12 +1,12 @@
 import { Users, Building2, FolderOpen, FileText, HardDrive, CheckCircle } from 'lucide-react'
-import { PageHeader } from '@/components/layout/page-header'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { formatBytes, formatNumber } from '@/lib/format'
 import { useOverviewMetrics } from './queries'
-import { StatCard } from './components/stat-card'
-import { GrowthChart } from './components/growth-chart'
-import { PlanBreakdown } from './components/plan-breakdown'
-import { RecentAudit } from './components/recent-audit'
-import { FailingWebhooks } from './components/failing-webhooks'
+import { StatCard } from './components/StatCard'
+import { GrowthChart } from './components/GrowthChart'
+import { PlanBreakdown } from './components/PlanBreakdown'
+import { RecentAudit } from './components/RecentAudit'
+import { FailingWebhooks } from './components/FailingWebhooks'
 
 function StatsSkeleton() {
   return (

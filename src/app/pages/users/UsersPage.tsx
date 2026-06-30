@@ -5,16 +5,16 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { PageHeader } from '@/components/layout/page-header'
-import { DataTable } from '@/components/data-table/data-table'
-import { FilterBar } from '@/components/data-table/filter-bar'
-import { Pagination } from '@/components/data-table/pagination'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { DataTable } from '@/components/data-table/DataTable'
+import { FilterBar } from '@/components/data-table/FilterBar'
+import { Pagination } from '@/components/data-table/Pagination'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { TenantUser } from '@/lib/types'
 import { useUsers } from './queries'
-import { UserDetailSheet } from './components/user-detail-sheet'
+import { UserDetailSheet } from './components/UserDetailSheet'
 
 const LIMIT = 20
 
