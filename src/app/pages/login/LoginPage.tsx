@@ -14,6 +14,10 @@ const schema = z.object({
 
 type LoginValues = z.infer<typeof schema>
 
+const DEMO_EMAIL = import.meta.env.VITE_DEMO_ADMIN_EMAIL as string | undefined
+const DEMO_PASSWORD = import.meta.env.VITE_DEMO_ADMIN_PASSWORD as string | undefined
+const DEMO_AVAILABLE = Boolean(DEMO_EMAIL && DEMO_PASSWORD)
+
 export function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
@@ -29,6 +33,12 @@ export function LoginPage() {
 
   async function onSubmit(values: LoginValues) {
     await login.mutateAsync(values)
+    navigate('/', { replace: true })
+  }
+
+  async function onQuickLogin() {
+    if (!DEMO_EMAIL || !DEMO_PASSWORD) return
+    await login.mutateAsync({ email: DEMO_EMAIL, password: DEMO_PASSWORD })
     navigate('/', { replace: true })
   }
 
@@ -114,6 +124,20 @@ export function LoginPage() {
             {login.isPending ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
+
+        {DEMO_AVAILABLE && (
+          <div className="mt-4 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onQuickLogin}
+              disabled={login.isPending}
+            >
+              {login.isPending ? 'Signing in…' : 'Quick login (Demo)'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

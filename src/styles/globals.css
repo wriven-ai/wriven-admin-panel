@@ -27,8 +27,8 @@
   --color-accent-foreground: var(--text-primary);
   --color-primary: var(--brand-accent);
   --color-primary-foreground: #ffffff;
-  --color-secondary: var(--brand-surface-soft);
-  --color-secondary-foreground: var(--text-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-destructive: var(--status-error);
   --color-destructive-foreground: #ffffff;
 
@@ -59,6 +59,11 @@
   --brand-surface-soft: #eef4f0;
   --brand-border: #dbe5df;
 
+  /* Secondary accent = amber (soft-tint surface + deep-amber text for AA at small sizes).
+     Full-strength amber stays available via --brand-secondary / bg-brand-secondary. */
+  --secondary: #fde9cf;
+  --secondary-foreground: #9a5b06;
+
   --text-primary: #080d0a;
   --text-secondary: #424c46;
   --text-muted: #79857e;
@@ -85,6 +90,9 @@
   --brand-surface: #0c1210;
   --brand-surface-soft: #141d19;
   --brand-border: #1d2a23;
+
+  --secondary: #2a1c08;
+  --secondary-foreground: #fbbf24;
 
   --text-primary: #faf8f5;
   --text-secondary: #99a6a0;
