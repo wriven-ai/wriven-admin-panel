@@ -18,7 +18,7 @@ when a module completes.
 | Module | Route base | Status | Notes |
 |---|---|---|---|
 | Plans | `admin/plans` | ✅ | Reference implementation. Rebuilt + synced (backend got `yearlyDiscountPercent`/`yearlyDiscountAmount`). No plan delete — deactivation is the retire path. |
-| Workspaces | `admin/workspaces` | ✅ | Rebuilt as tabbed hub page (`/workspaces/:id`, shadcn Tabs, URL-synced `?tab=`): Projects, Members, Content Types, Content, Media, API Keys, Webhooks, Plan. Row click navigates; old hand-rolled sheet removed. Needed two backend additions (2026-08-15): `GET /admin/content-types` (new endpoint) + `workspaceId` filter on `GET /admin/projects`. Plan assignment lives on the Plan tab. See `plans/03-workspace-hub.md`. |
+| Workspaces | `admin/workspaces` | ✅ | Rebuilt as tabbed hub page (`/workspaces/:id`, shadcn Tabs, URL-synced `?tab=`): Projects (search + per-project inspect sheet), Members, Content Types (fields inspect sheet), Content (entry inspect sheet w/ data payload + takedown), Media, API Keys, Webhooks, Plan. Row click navigates; old hand-rolled sheet removed. Needed two backend additions (2026-08-15): `GET /admin/content-types` (new endpoint) + `workspaceId` filter on `GET /admin/projects`. Plan assignment lives on the Plan tab. See `plans/03-workspace-hub.md`. |
 | Users | `admin/users` | ⬜ | |
 | Projects | `admin/projects` | ⬜ | |
 | Content | `admin/content` | ⬜ | |
