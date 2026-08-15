@@ -6,6 +6,7 @@ import { RootLayout } from '@/app/layout/RootLayout'
 import { LoginPage } from '@/app/pages/login/LoginPage'
 import { OverviewPage } from '@/app/pages/overview/OverviewPage'
 import { UsersPage } from '@/app/pages/users/UsersPage'
+import { UserDetailPage } from '@/app/pages/users/UserDetailPage'
 import { WorkspacesPage } from '@/app/pages/workspaces/WorkspacesPage'
 import { WorkspaceDetailPage } from '@/app/pages/workspaces/WorkspaceDetailPage'
 import { ProjectsPage } from '@/app/pages/projects/ProjectsPage'
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <OverviewPage /> },
           { path: 'users', element: <UsersPage /> },
+          { path: 'users/:id', element: <UserDetailPage /> },
           { path: 'workspaces', element: <WorkspacesPage /> },
           { path: 'workspaces/:id', element: <WorkspaceDetailPage /> },
           { path: 'projects', element: <ProjectsPage /> },

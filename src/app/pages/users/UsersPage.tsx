@@ -5,25 +5,24 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { DataTable } from '@/components/data-table/DataTable'
 import { FilterBar } from '@/components/data-table/FilterBar'
 import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { AdminUserRow } from '@/lib/types'
 import { useUsers } from './queries'
-import { UserDetailSheet } from './components/UserDetailSheet'
 
 const LIMIT = 20
 
 export function UsersPage() {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
   const [suspended, setSuspended] = useState<boolean | undefined>()
   const [sorting, setSorting] = useState<SortingState>([])
-  const [selected, setSelected] = useState<AdminUserRow | null>(null)
 
   const { data, isLoading } = useUsers({ page, limit: LIMIT, q: q || undefined, suspended })
 
@@ -81,15 +80,7 @@ export function UsersPage() {
     },
     {
       id: 'actions',
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => setSelected(row.original)}
-        >
-          View
-        </Button>
-      ),
+      cell: () => <span className="text-2xs text-muted-foreground">View →</span>,
     },
   ]
 
@@ -131,6 +122,8 @@ export function UsersPage() {
         columns={columns}
         isLoading={isLoading}
         emptyMessage="No users found."
+        getRowClassName={() => 'cursor-pointer'}
+        onRowClick={(row) => navigate(`/users/${row.id}`)}
       />
 
       <Pagination
@@ -139,8 +132,6 @@ export function UsersPage() {
         limit={LIMIT}
         onPage={setPage}
       />
-
-      <UserDetailSheet user={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

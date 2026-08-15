@@ -19,7 +19,7 @@ when a module completes.
 |---|---|---|---|
 | Plans | `admin/plans` | ✅ | Reference implementation. Rebuilt + synced (backend got `yearlyDiscountPercent`/`yearlyDiscountAmount`). No plan delete — deactivation is the retire path. |
 | Workspaces | `admin/workspaces` | ✅ | Rebuilt as tabbed hub page (`/workspaces/:id`, shadcn Tabs, URL-synced `?tab=`): Projects (search + per-project inspect sheet), Members, Content Types (fields inspect sheet), Content (entry inspect sheet w/ data payload + takedown), Media, API Keys, Webhooks, Plan. Row click navigates; old hand-rolled sheet removed. Needed two backend additions (2026-08-15): `GET /admin/content-types` (new endpoint) + `workspaceId` filter on `GET /admin/projects`. Plan assignment lives on the Plan tab. See `plans/03-workspace-hub.md`. |
-| Users | `admin/users` | ⬜ | |
+| Users | `admin/users` | ✅ | Rebuilt as hub page (`/users/:id`): Details (profile + suspend/verify/delete actions with session-kill warning + CONFLICT banner), Workspaces, Projects tabs with cross-links to workspace/project hubs. Backend fix (2026-08-15): added `suspended` filter to `GET /admin/users` — the panel's Status filter was sending a param the old DTO didn't declare → guaranteed 400 (Guideline §3.2 class). Old hand-rolled sheet removed. |
 | Projects | `admin/projects` | ✅ | Rebuilt as tabbed hub page (`/projects/:id`): Details & Usage (aggregated per-project usage), Content Types, Entries, Media, API Keys, Webhooks. Usage endpoint added to backend (2026-08-15): `GET /admin/projects/:id/usage` (`AdminProjectUsage` — counts, storage, AI tokens/cost). Shared scope tabs moved to `src/components/admin-tabs/` (accept `workspaceId` or `projectId`). |
 | Content | `admin/content` | ⬜ | |
 | Media | `admin/media` | ⬜ | |
