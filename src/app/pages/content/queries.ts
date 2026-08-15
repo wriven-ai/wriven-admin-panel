@@ -24,7 +24,7 @@ export function useContent(params: ContentListParams) {
   })
 
   return useQuery({
-    queryKey: qk.content.list(params as Record<string, unknown>),
+    queryKey: qk.content.list(params),
     queryFn: () => api.get<Paginated<AdminEntryRow>>(`/admin/content?${sp}`),
   })
 }

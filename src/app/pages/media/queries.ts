@@ -20,7 +20,7 @@ export function useMediaAssets(params: MediaListParams) {
   })
 
   return useQuery({
-    queryKey: qk.media.list(params as Record<string, unknown>),
+    queryKey: qk.media.list(params),
     queryFn: () => api.get<Paginated<AdminMediaRow>>(`/admin/media?${sp}`),
   })
 }

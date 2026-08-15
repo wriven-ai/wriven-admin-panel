@@ -33,7 +33,7 @@ export function useTickets(params: TicketListParams) {
   if (params.assignee) sp.set('assignee', params.assignee)
 
   return useQuery({
-    queryKey: qk.support.list(params as Record<string, unknown>),
+    queryKey: qk.support.list(params),
     queryFn: () => api.get<Paginated<AdminTicketRow>>(`/admin/support/tickets?${sp}`),
   })
 }

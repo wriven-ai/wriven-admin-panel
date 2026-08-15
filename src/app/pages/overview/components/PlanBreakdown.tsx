@@ -8,7 +8,7 @@ const COLORS = [
 ]
 
 interface PlanBreakdownProps {
-  data: Array<{ planKey: string; planName: string; count: number }>
+  data: Array<{ key: string; name: string; count: number }>
 }
 
 export function PlanBreakdown({ data }: PlanBreakdownProps) {
@@ -20,7 +20,7 @@ export function PlanBreakdown({ data }: PlanBreakdownProps) {
           <Pie
             data={data}
             dataKey="count"
-            nameKey="planName"
+            nameKey="name"
             cx="50%"
             cy="50%"
             outerRadius={70}

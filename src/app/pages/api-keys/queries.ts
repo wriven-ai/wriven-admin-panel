@@ -20,7 +20,7 @@ export function useApiKeys(params: ApiKeyListParams) {
   })
 
   return useQuery({
-    queryKey: qk.apiKeys.list(params as Record<string, unknown>),
+    queryKey: qk.apiKeys.list(params),
     queryFn: () => api.get<Paginated<AdminApiKeyRow>>(`/admin/api-keys?${sp}`),
   })
 }

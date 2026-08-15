@@ -20,7 +20,7 @@ export function useWebhooks(params: WebhookListParams) {
   })
 
   return useQuery({
-    queryKey: qk.webhooks.list(params as Record<string, unknown>),
+    queryKey: qk.webhooks.list(params),
     queryFn: () => api.get<Paginated<AdminWebhookRow>>(`/admin/webhooks?${sp}`),
   })
 }

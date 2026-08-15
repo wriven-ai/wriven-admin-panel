@@ -18,7 +18,7 @@ export function useWorkspaces(params: WorkspaceListParams) {
   })
 
   return useQuery({
-    queryKey: qk.workspaces.list(params as Record<string, unknown>),
+    queryKey: qk.workspaces.list(params),
     queryFn: () => api.get<Paginated<AdminWorkspaceRow>>(`/admin/workspaces?${sp}`),
   })
 }

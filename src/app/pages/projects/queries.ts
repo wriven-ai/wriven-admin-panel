@@ -20,7 +20,7 @@ export function useProjects(params: ProjectListParams) {
   })
 
   return useQuery({
-    queryKey: qk.projects.list(params as Record<string, unknown>),
+    queryKey: qk.projects.list(params),
     queryFn: () => api.get<Paginated<AdminProjectRow>>(`/admin/projects?${sp}`),
   })
 }

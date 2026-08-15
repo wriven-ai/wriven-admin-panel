@@ -20,7 +20,7 @@ export function useUsers(params: UserListParams) {
   })
 
   return useQuery({
-    queryKey: qk.users.list(params as Record<string, unknown>),
+    queryKey: qk.users.list(params),
     queryFn: () => api.get<Paginated<AdminUserRow>>(`/admin/users?${sp}`),
   })
 }

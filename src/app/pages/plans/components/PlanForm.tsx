@@ -23,12 +23,13 @@ const schema = z.object({
     z.number().int().min(0),
   ),
   limits: z.record(z.string(), z.preprocess(
-    (v) => (v === '' || v === null ? null : Number(v)),
-    z.number().int().positive().nullable().optional(),
+    (v) => (v === '' || v == null ? null : Number(v)),
+    z.number().int().positive().nullable(),
   )).optional(),
 })
 
-export type PlanFormValues = z.infer<typeof schema>
+type PlanFormInput = z.input<typeof schema>
+export type PlanFormValues = z.output<typeof schema>
 
 interface PlanFormProps {
   defaultValues?: Partial<PlanView>
@@ -48,7 +49,7 @@ export function PlanForm({ defaultValues, onSubmit, onCancel, isEdit }: PlanForm
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<PlanFormValues>({
+  } = useForm<PlanFormInput, unknown, PlanFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       key: defaultValues?.key ?? '',

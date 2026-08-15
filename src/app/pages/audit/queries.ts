@@ -23,7 +23,7 @@ export function useAuditLog(params: AuditListParams) {
   })
 
   return useQuery({
-    queryKey: qk.audit.list(params as Record<string, unknown>),
+    queryKey: qk.audit.list(params),
     queryFn: () => api.get<Paginated<AuditLogView>>(`/admin/audit-log?${sp}`),
   })
 }
