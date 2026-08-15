@@ -147,13 +147,15 @@ export interface PlanLimits {
   apiRequestsPerMonth?: number | null
   apiKeys?: number | null
   webhooks?: number | null
+  revisionsPerEntry?: number | null
+  aiTextRequestsPerMonth?: number | null
+  aiImageRequestsPerMonth?: number | null
 }
 
 export interface PlanFeatures {
   scheduledPublishing?: boolean
   revisionHistory?: boolean
   customRoles?: boolean
-  sso?: boolean
   auditLog?: boolean
   previewApi?: boolean
   supportTier?: 'community' | 'email' | 'priority'
@@ -168,11 +170,71 @@ export interface PlanView {
   isPublic: boolean
   active: boolean
   priceMonthly: number | null
+  /** FINAL yearly amount Stripe charges (cents). */
   priceYearly: number | null
+  /** Yearly pricing breakdown — null = explicit/absent yearly, no discount. */
+  yearlyDiscountPercent: number | null
+  yearlyDiscountAmount: number | null
   currency: string
   trialDays: number
   limits: PlanLimits
   features: PlanFeatures
+}
+
+/** `GET/POST/PATCH /admin/plans` — adds the Stripe linkage the tenant view omits. */
+export interface AdminPlanView extends PlanView {
+  stripeProductId: string | null
+  stripePriceIdMonthly: string | null
+  stripePriceIdYearly: string | null
+}
+
+/** Ordered limit dimensions shared by the form + detail sheet. */
+export const PLAN_LIMIT_KEYS: { key: keyof PlanLimits; label: string }[] = [
+  { key: 'projects', label: 'Projects' },
+  { key: 'members', label: 'Members' },
+  { key: 'environments', label: 'Environments' },
+  { key: 'contentTypes', label: 'Content types' },
+  { key: 'entries', label: 'Entries' },
+  { key: 'locales', label: 'Locales' },
+  { key: 'storageMb', label: 'Storage (MB)' },
+  { key: 'assetBandwidthGb', label: 'Asset bandwidth (GB)' },
+  { key: 'apiRequestsPerMonth', label: 'API requests / month' },
+  { key: 'apiKeys', label: 'API keys' },
+  { key: 'webhooks', label: 'Webhooks' },
+  { key: 'revisionsPerEntry', label: 'Revisions / entry' },
+  { key: 'aiTextRequestsPerMonth', label: 'AI text requests / month' },
+  { key: 'aiImageRequestsPerMonth', label: 'AI image requests / month' },
+]
+
+/** Feature entitlements shared by the form + detail sheet. */
+export const PLAN_FEATURE_DEFS: (
+  | { key: Exclude<keyof PlanFeatures, 'supportTier'>; label: string; type: 'boolean' }
+  | { key: 'supportTier'; label: string; type: 'tier'; options: PlanFeatures['supportTier'][] }
+)[] = [
+  { key: 'scheduledPublishing', label: 'Scheduled publishing', type: 'boolean' },
+  { key: 'revisionHistory', label: 'Revision history', type: 'boolean' },
+  { key: 'customRoles', label: 'Custom roles', type: 'boolean' },
+  { key: 'auditLog', label: 'Audit log', type: 'boolean' },
+  { key: 'previewApi', label: 'Preview API', type: 'boolean' },
+  {
+    key: 'supportTier',
+    label: 'Support tier',
+    type: 'tier',
+    options: ['community', 'email', 'priority'],
+  },
+]
+
+/**
+ * Yearly price from a discount percent — MUST stay identical to the
+ * server-side computation in auth-service `AdminPlansService.create`.
+ */
+export function computeYearlyPrice(
+  monthlyCents: number,
+  discountPercent: number,
+): { priceYearly: number; discountAmount: number } {
+  const fullYear = monthlyCents * 12
+  const priceYearly = Math.round(fullYear * (1 - discountPercent / 100))
+  return { priceYearly, discountAmount: fullYear - priceYearly }
 }
 
 // ── Audit ─────────────────────────────────────────────────────────────────────

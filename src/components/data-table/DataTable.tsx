@@ -4,6 +4,14 @@ import {
   type Table as TanTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface DataTableProps<TData> {
   table: TanTable<TData>
@@ -11,6 +19,7 @@ interface DataTableProps<TData> {
   isLoading?: boolean
   emptyMessage?: string
   getRowClassName?: (row: { original: TData }) => string | undefined
+  onRowClick?: (row: TData) => void
 }
 
 export function DataTable<TData>({
@@ -18,72 +27,73 @@ export function DataTable<TData>({
   isLoading,
   emptyMessage = 'No results found.',
   getRowClassName,
+  onRowClick,
 }: DataTableProps<TData>) {
   const rows = table.getRowModel().rows
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b bg-muted/50">
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className={cn(
-                      'whitespace-nowrap px-4 py-2.5 text-left text-xs font-medium text-muted-foreground',
-                      header.column.getCanSort() && 'cursor-pointer select-none hover:text-foreground',
-                    )}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <span className="flex items-center gap-1">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === 'asc' && ' ↑'}
-                      {header.column.getIsSorted() === 'desc' && ' ↓'}
-                    </span>
-                  </th>
+    <div className="overflow-hidden rounded-lg border bg-card shadow-[var(--shadow-sm)]">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id} className="bg-muted/50 hover:bg-muted/50">
+              {hg.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={cn(
+                    'text-xs text-muted-foreground',
+                    header.column.getCanSort() &&
+                      'cursor-pointer select-none hover:text-foreground',
+                  )}
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <span className="flex items-center gap-1">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === 'asc' && ' ↑'}
+                    {header.column.getIsSorted() === 'desc' && ' ↓'}
+                  </span>
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <TableRow key={i}>
+                {table.getAllColumns().map((col) => (
+                  <TableCell key={col.id}>
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                  </TableCell>
                 ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y">
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i}>
-                  {table.getAllColumns().map((col) => (
-                    <td key={col.id} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-muted" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={table.getAllColumns().length}
-                  className="py-12 text-center text-sm text-muted-foreground"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={cn('transition-colors hover:bg-muted/30', getRowClassName?.(row))}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="whitespace-nowrap px-4 py-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </TableRow>
+            ))
+          ) : rows.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell
+                colSpan={table.getAllColumns().length}
+                className="py-12 text-center text-sm text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className={cn(onRowClick && 'cursor-pointer', getRowClassName?.(row))}
+                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }

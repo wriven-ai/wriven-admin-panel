@@ -1,117 +1,252 @@
-import { Plus, Pencil } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+} from '@tanstack/react-table'
+import { Link2, Link2Off, Plus } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { DataTable } from '@/components/data-table/DataTable'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useAdminStore } from '@/stores/admin'
 import { formatPrice } from '@/lib/format'
-import type { PlanView } from '@/lib/types'
+import { PLAN_LIMIT_KEYS, type AdminPlanView } from '@/lib/types'
 import { usePlans, useCreatePlan, useUpdatePlan } from './queries'
+import type { CreatePlanDto, UpdatePlanDto } from './queries'
 import { PlanForm } from './components/PlanForm'
-import type { PlanFormValues } from './components/PlanForm'
+import { PlanDetailSheet } from './components/PlanDetailSheet'
 
-type Mode = { type: 'create' } | { type: 'edit'; plan: PlanView } | null
+const columnHelper = createColumnHelper<AdminPlanView>()
 
 export function PlansPage() {
-  const [mode, setMode] = useState<Mode>(null)
+  const role = useAdminStore((s) => s.me?.role)
+  const canWrite = role === 'admin'
+
   const { data: plans, isLoading } = usePlans()
   const createPlan = useCreatePlan()
   const updatePlan = useUpdatePlan()
 
-  async function handleSubmit(values: PlanFormValues) {
-    if (mode?.type === 'edit') {
-      await updatePlan.mutateAsync({ id: mode.plan.id, ...values })
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<AdminPlanView | null>(null)
+  const [deactivating, setDeactivating] = useState<AdminPlanView | null>(null)
+
+  const selected = useMemo(
+    () => plans?.find((p) => p.id === selectedId) ?? null,
+    [plans, selectedId],
+  )
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: 'Plan',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{row.original.name}</span>
+            <Badge variant="outline" className="font-mono">
+              {row.original.key}
+            </Badge>
+          </div>
+        ),
+      }),
+      columnHelper.accessor('priceMonthly', {
+        header: 'Price',
+        cell: ({ row }) => {
+          const { priceMonthly, priceYearly, yearlyDiscountPercent } = row.original
+          if (priceMonthly == null && priceYearly == null) return 'Free'
+          return (
+            <div className="flex items-baseline gap-1.5">
+              {priceMonthly != null && <span>{formatPrice(priceMonthly)} / mo</span>}
+              {priceYearly != null && (
+                <span className="text-xs text-muted-foreground">
+                  {formatPrice(priceYearly)} / yr
+                  {yearlyDiscountPercent != null && (
+                    <span className="text-status-success"> (−{yearlyDiscountPercent}%)</span>
+                  )}
+                </span>
+              )}
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('active', {
+        header: 'Status',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1.5">
+            {row.original.active ? (
+              <Badge variant="success">Active</Badge>
+            ) : (
+              <Badge variant="error">Inactive</Badge>
+            )}
+            {!row.original.isPublic && <Badge variant="secondary">Private</Badge>}
+          </div>
+        ),
+      }),
+      columnHelper.display({
+        id: 'limits',
+        header: 'Limits',
+        cell: ({ row }) => {
+          const limits = row.original.limits ?? {}
+          const set = PLAN_LIMIT_KEYS.filter(({ key }) => limits[key] != null)
+          if (set.length === 0) return <span className="text-muted-foreground">Unlimited</span>
+          return (
+            <span className="text-xs text-muted-foreground">
+              {set
+                .slice(0, 3)
+                .map(
+                  ({ key, label }) => (
+                    <span key={key}>
+                      {label}{' '}
+                      <span className="font-medium text-foreground">{limits[key]}</span>
+                    </span>
+                  ),
+                )
+                .reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, ' · ', el]), [])}
+              {set.length > 3 && ` +${set.length - 3}`}
+            </span>
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'stripe',
+        header: 'Stripe',
+        cell: ({ row }) =>
+          row.original.stripeProductId ? (
+            <Link2 className="h-3.5 w-3.5 text-status-success" />
+          ) : (
+            <Link2Off className="h-3.5 w-3.5 text-muted-foreground" />
+          ),
+      }),
+    ],
+    [],
+  )
+
+  const table = useReactTable({
+    data: plans ?? [],
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  async function handleFormSubmit(payload: CreatePlanDto | (UpdatePlanDto & { id: string })) {
+    if ('id' in payload) {
+      await updatePlan.mutateAsync(payload)
       toast.success('Plan updated.')
     } else {
-      await createPlan.mutateAsync(values)
+      await createPlan.mutateAsync(payload)
       toast.success('Plan created.')
     }
-    setMode(null)
+    setFormOpen(false)
+    setEditing(null)
   }
 
-  if (mode) {
-    return (
-      <div className="space-y-4">
-        <PageHeader
-          title={mode.type === 'create' ? 'New plan' : `Edit ${mode.type === 'edit' ? mode.plan.name : ''}`}
-        />
-        <div className="max-w-2xl rounded-lg border bg-card p-6">
-          <PlanForm
-            defaultValues={mode.type === 'edit' ? mode.plan : undefined}
-            isEdit={mode.type === 'edit'}
-            onSubmit={handleSubmit}
-            onCancel={() => setMode(null)}
-          />
-        </div>
-      </div>
-    )
+  async function handleToggleActive(plan: AdminPlanView) {
+    try {
+      await updatePlan.mutateAsync({ id: plan.id, active: !plan.active })
+      toast.success(plan.active ? 'Plan deactivated.' : 'Plan reactivated.')
+    } catch {
+      toast.error('Failed to update the plan.')
+    } finally {
+      setDeactivating(null)
+    }
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       <PageHeader
         title="Plans"
-        description="Define platform plans and their limits."
+        description="Define platform plans and their limits. Pricing is managed by Stripe."
         action={
-          <Button size="sm" onClick={() => setMode({ type: 'create' })}>
-            <Plus className="h-4 w-4" />
-            New plan
-          </Button>
+          canWrite && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null)
+                setFormOpen(true)
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              New plan
+            </Button>
+          )
         }
       />
 
-      {isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg border bg-muted" />
-          ))}
-        </div>
-      )}
+      <DataTable
+        table={table}
+        columns={columns}
+        isLoading={isLoading}
+        emptyMessage="No plans yet."
+        getRowClassName={() => 'cursor-pointer'}
+        onRowClick={(plan) => setSelectedId(plan.id)}
+      />
 
-      <div className="space-y-3">
-        {plans?.map((plan) => (
-          <div key={plan.id} className="rounded-lg border bg-card p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">{plan.name}</p>
-                  <Badge variant="outline" className="font-mono text-xs">{plan.key}</Badge>
-                  {!plan.active && <Badge variant="error">Inactive</Badge>}
-                  {!plan.isPublic && <Badge variant="secondary">Private</Badge>}
-                </div>
-                {plan.description && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{plan.description}</p>
-                )}
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {formatPrice(plan.priceMonthly)} / month
-                  {plan.priceYearly && ` · ${formatPrice(plan.priceYearly)} / year`}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setMode({ type: 'edit', plan })}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+      <PlanDetailSheet
+        plan={selected}
+        canWrite={canWrite}
+        onClose={() => setSelectedId(null)}
+        onEdit={(plan) => {
+          setEditing(plan)
+          setSelectedId(null)
+          setFormOpen(true)
+        }}
+        onToggleActive={(plan) => {
+          if (plan.active) {
+            setDeactivating(plan)
+          } else {
+            handleToggleActive(plan)
+          }
+        }}
+      />
 
-            {Object.keys(plan.limits).length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {Object.entries(plan.limits).map(([k, v]) => (
-                  <span key={k}>
-                    <span className="capitalize">{k}</span>:{' '}
-                    <strong className="text-foreground">{v ?? '∞'}</strong>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-        {plans?.length === 0 && (
-          <p className="text-sm text-muted-foreground">No plans yet. Create one.</p>
-        )}
-      </div>
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editing ? `Edit ${editing.name}` : 'New plan'}</DialogTitle>
+            <DialogDescription>
+              {editing
+                ? 'Update the plan\'s details, limits and features.'
+                : 'Define a plan, its pricing and limits.'}
+            </DialogDescription>
+          </DialogHeader>
+          <PlanForm
+            key={editing?.id ?? 'create'}
+            plan={editing ?? undefined}
+            onSubmit={handleFormSubmit}
+            onCancel={() => {
+              setFormOpen(false)
+              setEditing(null)
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!deactivating}
+        title={`Deactivate ${deactivating?.name ?? ''}?`}
+        description="This archives the plan's Stripe product and deactivates its prices. Workspaces on this plan keep access until reassigned. Reactivating here does not restore the Stripe product."
+        confirmLabel="Deactivate"
+        destructive
+        onCancel={() => setDeactivating(null)}
+        onConfirm={() => {
+          if (deactivating) handleToggleActive(deactivating)
+        }}
+      />
     </div>
   )
 }
