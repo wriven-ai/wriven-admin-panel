@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/Badge'
 import type { SupportPriority } from '@/lib/types'
 
-const PRIORITY_VARIANT: Record<SupportPriority, 'outline' | 'default' | 'warning' | 'error'> = {
+const PRIORITY_VARIANT: Record<SupportPriority, 'outline' | 'secondary' | 'warning' | 'error'> = {
   low: 'outline',
-  normal: 'default',
+  normal: 'secondary',
   high: 'warning',
   urgent: 'error',
 }

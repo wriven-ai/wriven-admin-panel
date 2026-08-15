@@ -72,6 +72,7 @@ export function OverviewPage() {
                 title="Open tickets"
                 value={formatNumber(supportMetrics.open)}
                 icon={LifeBuoy}
+                accent="secondary"
                 description={`${formatNumber(supportMetrics.unassigned)} unassigned`}
               />
             )}

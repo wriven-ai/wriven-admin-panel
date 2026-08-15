@@ -111,7 +111,7 @@ export function ApiKeysPage() {
     <div className="space-y-4">
       <PageHeader title="API Keys" description="Platform-wide key oversight. Raw tokens are never shown." />
 
-      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
+      <FilterBar />
 
       <DataTable
         table={table}

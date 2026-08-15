@@ -6,15 +6,29 @@ interface StatCardProps {
   value: string | number
   icon: LucideIcon
   description?: string
+  /** Icon accent — defaults to muted; `secondary` uses the amber brand tint. */
+  accent?: 'muted' | 'secondary'
   className?: string
 }
 
-export function StatCard({ title, value, icon: Icon, description, className }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  icon: Icon,
+  description,
+  accent = 'muted',
+  className,
+}: StatCardProps) {
   return (
     <div className={cn('rounded-lg bg-card shadow-[var(--shadow-sm)] p-5', className)}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon
+          className={cn(
+            'h-4 w-4',
+            accent === 'secondary' ? 'text-secondary-foreground' : 'text-muted-foreground',
+          )}
+        />
       </div>
       <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
       {description && (

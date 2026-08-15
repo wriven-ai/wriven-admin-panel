@@ -58,7 +58,7 @@ export function GrowthChart({ data }: GrowthChartProps) {
           <Line
             type="monotone"
             dataKey="workspaces"
-            stroke="var(--text-muted)"
+            stroke="var(--brand-secondary)"
             strokeWidth={2}
             dot={false}
             name="Workspaces"

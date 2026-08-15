@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
+import { useAdminStore } from '@/stores/admin'
 import type {
   Paginated,
   AdminTicketRow,
@@ -30,7 +31,13 @@ export function useTickets(params: TicketListParams) {
   if (params.priority) sp.set('priority', params.priority)
   if (params.scope) sp.set('scopeType', params.scope)
   if (params.workspaceId) sp.set('workspaceId', params.workspaceId)
-  if (params.assignee) sp.set('assignee', params.assignee)
+  // The DTO takes `assignedAdminId` (UUID) or `unassigned` — never a raw
+  // 'me'/'unassigned' string (whitelist validation would reject it).
+  if (params.assignee === 'unassigned') sp.set('unassigned', 'true')
+  else if (params.assignee === 'me') {
+    const meId = useAdminStore.getState().me?.id
+    if (meId) sp.set('assignedAdminId', meId)
+  } else if (params.assignee) sp.set('assignedAdminId', params.assignee)
 
   return useQuery({
     queryKey: qk.support.list(params),

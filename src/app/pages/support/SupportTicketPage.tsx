@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { ArrowLeft, Send } from 'lucide-react'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
@@ -16,7 +15,6 @@ import { MessageBubble } from './components/MessageBubble'
 
 export function SupportTicketPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const me = useAdminStore((s) => s.me)
   const canWrite = me?.role === 'admin' || me?.role === 'moderator'
 
@@ -81,20 +79,28 @@ export function SupportTicketPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" onClick={() => navigate('/support')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <PageHeader
-          title={`#${ticket.number} — ${ticket.subject}`}
-          description={`${ticket.workspaceName} · ${ticket.authorEmail} · opened ${formatDate(ticket.createdAt)}`}
-        />
-      </div>
+      <Link
+        to="/support"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Support
+      </Link>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge status={ticket.status} />
-        <PriorityBadge priority={ticket.priority} />
-        <ScopeBadge scope={ticket.scopeType} />
+      <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              #{ticket.number} — {ticket.subject}
+            </h1>
+            <StatusBadge status={ticket.status} />
+            <PriorityBadge priority={ticket.priority} />
+            <ScopeBadge scope={ticket.scopeType} />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {ticket.workspaceName} · {ticket.authorEmail} · opened {formatDate(ticket.createdAt)}
+          </p>
+        </div>
       </div>
 
       {canWrite && (

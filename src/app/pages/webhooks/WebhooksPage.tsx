@@ -129,7 +129,7 @@ export function WebhooksPage() {
     <div className="space-y-4">
       <PageHeader title="Webhooks" description="Platform-wide webhook subscriptions." />
 
-      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
+      <FilterBar />
 
       <DataTable
         table={table}

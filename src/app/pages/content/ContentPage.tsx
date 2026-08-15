@@ -118,7 +118,7 @@ export function ContentPage() {
     <div className="space-y-4">
       <PageHeader title="Content" description="Global content moderation browser." />
 
-      <FilterBar value="" onChange={() => {}}>
+      <FilterBar>
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}

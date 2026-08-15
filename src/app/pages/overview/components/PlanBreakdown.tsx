@@ -2,9 +2,9 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 
 const COLORS = [
   'var(--brand-accent)',
+  'var(--brand-secondary)',
+  'var(--status-success)',
   'var(--text-muted)',
-  '#6366f1',
-  '#f59e0b',
 ]
 
 interface PlanBreakdownProps {

@@ -8,7 +8,6 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { DataTable } from '@/components/data-table/DataTable'
-import { FilterBar } from '@/components/data-table/FilterBar'
 import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +16,7 @@ import { formatBytes, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminMediaRow } from '@/lib/types'
 import { useMediaAssets, useWorkspaceStorage, usePurgeMedia } from './queries'
+import { useWorkspaces } from '../workspaces/queries'
 
 const LIMIT = 20
 
@@ -28,6 +28,9 @@ export function MediaPage() {
 
   const { data, isLoading } = useMediaAssets({ page, limit: LIMIT })
   const { data: storage } = useWorkspaceStorage()
+  // Resolve workspace ids to names for the storage summary.
+  const { data: wsPage } = useWorkspaces({ page: 1, limit: 100 })
+  const wsNames = new Map((wsPage?.items ?? []).map((w) => [w.id, w.name]))
   const purge = usePurgeMedia()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -115,8 +118,12 @@ export function MediaPage() {
               .slice(0, 8)
               .map((ws) => (
                 <div key={ws.workspaceId} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-mono text-xs text-muted-foreground truncate max-w-[200px]">
-                    {ws.workspaceId}
+                  <span className="truncate max-w-[200px]">
+                    {wsNames.get(ws.workspaceId) ?? (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {ws.workspaceId}
+                      </span>
+                    )}
                   </span>
                   <span className="tabular-nums">{formatBytes(ws.totalBytes)}</span>
                   <span className="text-xs text-muted-foreground">{ws.assetCount} files</span>
@@ -125,8 +132,6 @@ export function MediaPage() {
           </div>
         </div>
       )}
-
-      <FilterBar value="" onChange={() => {}} placeholder="Filter…" />
 
       <DataTable
         table={table}
