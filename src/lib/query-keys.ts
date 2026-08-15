@@ -14,6 +14,7 @@ export const qk = {
   projects: {
     list: (params: object) => ['projects', params] as const,
     detail: (id: string) => ['projects', id] as const,
+    usage: (id: string) => ['projects', id, 'usage'] as const,
   },
   content: {
     list: (params: object) => ['content', params] as const,

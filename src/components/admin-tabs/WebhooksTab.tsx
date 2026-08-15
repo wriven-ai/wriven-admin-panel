@@ -14,9 +14,14 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminWebhookRow } from '@/lib/types'
-import { useWebhooks, useDisableWebhook } from '../../../webhooks/queries'
+import { useWebhooks, useDisableWebhook } from '@/app/pages/webhooks/queries'
 
 const LIMIT = 10
+
+interface ScopeProps {
+  workspaceId?: string
+  projectId?: string
+}
 
 function statusVariant(code: number | null) {
   if (code == null) return 'outline' as const
@@ -24,13 +29,13 @@ function statusVariant(code: number | null) {
   return 'error' as const
 }
 
-export function WebhooksTab({ workspaceId }: { workspaceId: string }) {
+export function WebhooksTab({ workspaceId, projectId }: ScopeProps) {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [toDisable, setToDisable] = useState<AdminWebhookRow | null>(null)
 
-  const { data, isLoading } = useWebhooks({ page, limit: LIMIT, workspaceId })
+  const { data, isLoading } = useWebhooks({ page, limit: LIMIT, workspaceId, projectId })
   const disable = useDisableWebhook()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -124,7 +129,7 @@ export function WebhooksTab({ workspaceId }: { workspaceId: string }) {
         table={table}
         columns={columns}
         isLoading={isLoading}
-        emptyMessage="No webhooks in this workspace."
+        emptyMessage="No webhooks found."
       />
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
 

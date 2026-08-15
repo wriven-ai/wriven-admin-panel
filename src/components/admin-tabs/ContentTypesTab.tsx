@@ -17,16 +17,21 @@ import {
 } from '@/components/ui/sheet'
 import { formatDate } from '@/lib/format'
 import type { AdminContentTypeRow } from '@/lib/types'
-import { useContentTypes } from '../../queries'
+import { useContentTypes } from '@/app/pages/workspaces/queries'
 
 const LIMIT = 10
 
-export function ContentTypesTab({ workspaceId }: { workspaceId: string }) {
+interface ScopeProps {
+  workspaceId?: string
+  projectId?: string
+}
+
+export function ContentTypesTab({ workspaceId, projectId }: ScopeProps) {
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [selected, setSelected] = useState<AdminContentTypeRow | null>(null)
 
-  const { data, isLoading } = useContentTypes({ page, limit: LIMIT, workspaceId })
+  const { data, isLoading } = useContentTypes({ page, limit: LIMIT, workspaceId, projectId })
 
   const columns: ColumnDef<AdminContentTypeRow>[] = [
     {
@@ -71,7 +76,7 @@ export function ContentTypesTab({ workspaceId }: { workspaceId: string }) {
         table={table}
         columns={columns}
         isLoading={isLoading}
-        emptyMessage="No content types in this workspace."
+        emptyMessage="No content types found."
         getRowClassName={() => 'cursor-pointer'}
         onRowClick={(row) => setSelected(row)}
       />

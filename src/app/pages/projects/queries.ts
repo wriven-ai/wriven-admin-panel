@@ -2,12 +2,20 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
-import type { Paginated, AdminProjectRow } from '@/lib/types'
+import type { Paginated, AdminProjectRow, AdminProjectUsage } from '@/lib/types'
 
 export function useProjectDetail(id: string) {
   return useQuery({
     queryKey: qk.projects.detail(id),
     queryFn: () => api.get<AdminProjectRow>(`/admin/projects/${id}`),
+    enabled: Boolean(id),
+  })
+}
+
+export function useProjectUsage(id: string) {
+  return useQuery({
+    queryKey: qk.projects.usage(id),
+    queryFn: () => api.get<AdminProjectUsage>(`/admin/projects/${id}/usage`),
     enabled: Boolean(id),
   })
 }

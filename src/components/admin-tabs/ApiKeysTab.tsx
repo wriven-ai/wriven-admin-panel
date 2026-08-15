@@ -14,17 +14,22 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminApiKeyRow } from '@/lib/types'
-import { useApiKeys, useRevokeApiKey } from '../../../api-keys/queries'
+import { useApiKeys, useRevokeApiKey } from '@/app/pages/api-keys/queries'
 
 const LIMIT = 10
 
-export function ApiKeysTab({ workspaceId }: { workspaceId: string }) {
+interface ScopeProps {
+  workspaceId?: string
+  projectId?: string
+}
+
+export function ApiKeysTab({ workspaceId, projectId }: ScopeProps) {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [toRevoke, setToRevoke] = useState<AdminApiKeyRow | null>(null)
 
-  const { data, isLoading } = useApiKeys({ page, limit: LIMIT, workspaceId })
+  const { data, isLoading } = useApiKeys({ page, limit: LIMIT, workspaceId, projectId })
   const revoke = useRevokeApiKey()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -103,7 +108,7 @@ export function ApiKeysTab({ workspaceId }: { workspaceId: string }) {
         table={table}
         columns={columns}
         isLoading={isLoading}
-        emptyMessage="No API keys in this workspace."
+        emptyMessage="No API keys found."
       />
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
 

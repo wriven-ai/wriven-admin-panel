@@ -9,6 +9,7 @@ import { UsersPage } from '@/app/pages/users/UsersPage'
 import { WorkspacesPage } from '@/app/pages/workspaces/WorkspacesPage'
 import { WorkspaceDetailPage } from '@/app/pages/workspaces/WorkspaceDetailPage'
 import { ProjectsPage } from '@/app/pages/projects/ProjectsPage'
+import { ProjectDetailPage } from '@/app/pages/projects/ProjectDetailPage'
 import { ContentPage } from '@/app/pages/content/ContentPage'
 import { MediaPage } from '@/app/pages/media/MediaPage'
 import { ApiKeysPage } from '@/app/pages/api-keys/ApiKeysPage'
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
           { path: 'workspaces', element: <WorkspacesPage /> },
           { path: 'workspaces/:id', element: <WorkspaceDetailPage /> },
           { path: 'projects', element: <ProjectsPage /> },
+          { path: 'projects/:id', element: <ProjectDetailPage /> },
           { path: 'content', element: <ContentPage /> },
           { path: 'support', element: <SupportQueuePage /> },
           { path: 'support/:id', element: <SupportTicketPage /> },

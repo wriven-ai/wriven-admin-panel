@@ -20,7 +20,7 @@ when a module completes.
 | Plans | `admin/plans` | ✅ | Reference implementation. Rebuilt + synced (backend got `yearlyDiscountPercent`/`yearlyDiscountAmount`). No plan delete — deactivation is the retire path. |
 | Workspaces | `admin/workspaces` | ✅ | Rebuilt as tabbed hub page (`/workspaces/:id`, shadcn Tabs, URL-synced `?tab=`): Projects (search + per-project inspect sheet), Members, Content Types (fields inspect sheet), Content (entry inspect sheet w/ data payload + takedown), Media, API Keys, Webhooks, Plan. Row click navigates; old hand-rolled sheet removed. Needed two backend additions (2026-08-15): `GET /admin/content-types` (new endpoint) + `workspaceId` filter on `GET /admin/projects`. Plan assignment lives on the Plan tab. See `plans/03-workspace-hub.md`. |
 | Users | `admin/users` | ⬜ | |
-| Projects | `admin/projects` | ⬜ | |
+| Projects | `admin/projects` | ✅ | Rebuilt as tabbed hub page (`/projects/:id`): Details & Usage (aggregated per-project usage), Content Types, Entries, Media, API Keys, Webhooks. Usage endpoint added to backend (2026-08-15): `GET /admin/projects/:id/usage` (`AdminProjectUsage` — counts, storage, AI tokens/cost). Shared scope tabs moved to `src/components/admin-tabs/` (accept `workspaceId` or `projectId`). |
 | Content | `admin/content` | ⬜ | |
 | Media | `admin/media` | ⬜ | |
 | API Keys | `admin/api-keys` | ⬜ | |

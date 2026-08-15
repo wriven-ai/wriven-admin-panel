@@ -71,6 +71,24 @@ export interface AdminProjectRow {
   createdAt: string
 }
 
+/** `GET /admin/projects/:id/usage` — aggregated per-project usage (core tables). */
+export interface AdminProjectUsage {
+  projectId: string
+  contentTypes: number
+  entries: { total: number; published: number; draft: number; archived: number }
+  media: { assetCount: number; totalBytes: number }
+  apiKeys: { total: number; active: number }
+  webhooks: { total: number; active: number }
+  ai: {
+    generations: number
+    succeeded: number
+    failed: number
+    totalTokens: number
+    /** USD × 1,000,000; null when no priced rows. */
+    costMicrousd: number | null
+  }
+}
+
 // ── Content ───────────────────────────────────────────────────────────────────
 export interface AdminEntryRow {
   id: string

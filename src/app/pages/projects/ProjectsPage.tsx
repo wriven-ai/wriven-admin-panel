@@ -5,6 +5,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { DataTable } from '@/components/data-table/DataTable'
@@ -21,6 +22,7 @@ import { useProjects, useDeleteProject } from './queries'
 const LIMIT = 20
 
 export function ProjectsPage() {
+  const navigate = useNavigate()
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
@@ -78,7 +80,10 @@ export function ProjectsPage() {
                 <Button
                   variant="destructive"
                   size="xs"
-                  onClick={() => setToDelete(row.original)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setToDelete(row.original)
+                  }}
                 >
                   Delete
                 </Button>
@@ -120,6 +125,8 @@ export function ProjectsPage() {
         columns={columns}
         isLoading={isLoading}
         emptyMessage="No projects found."
+        getRowClassName={() => 'cursor-pointer'}
+        onRowClick={(row) => navigate(`/projects/${row.id}`)}
       />
 
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />

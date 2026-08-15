@@ -14,22 +14,28 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatBytes, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminMediaRow } from '@/lib/types'
-import { useMediaAssets, useWorkspaceStorage, usePurgeMedia } from '../../../media/queries'
+import { useMediaAssets, useWorkspaceStorage, usePurgeMedia } from '@/app/pages/media/queries'
 
 const LIMIT = 10
 
-export function MediaTab({ workspaceId }: { workspaceId: string }) {
+interface ScopeProps {
+  workspaceId?: string
+  projectId?: string
+}
+
+export function MediaTab({ workspaceId, projectId }: ScopeProps) {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [toPurge, setToPurge] = useState<AdminMediaRow | null>(null)
 
-  const { data, isLoading } = useMediaAssets({ page, limit: LIMIT, workspaceId })
+  const { data, isLoading } = useMediaAssets({ page, limit: LIMIT, workspaceId, projectId })
   const { data: usage } = useWorkspaceStorage()
   const purge = usePurgeMedia()
 
   const canModerate = role === 'admin' || role === 'moderator'
-  const wsUsage = usage?.find((u) => u.workspaceId === workspaceId)
+  // Media usage is reported per workspace — only shown in workspace scope.
+  const wsUsage = workspaceId ? usage?.find((u) => u.workspaceId === workspaceId) : undefined
 
   const columns: ColumnDef<AdminMediaRow>[] = [
     {
@@ -111,7 +117,7 @@ export function MediaTab({ workspaceId }: { workspaceId: string }) {
         table={table}
         columns={columns}
         isLoading={isLoading}
-        emptyMessage="No media assets in this workspace."
+        emptyMessage="No media assets found."
       />
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
 

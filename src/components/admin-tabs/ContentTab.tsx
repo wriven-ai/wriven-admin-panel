@@ -22,7 +22,12 @@ import {
 import { formatDateTime, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminEntryRow } from '@/lib/types'
-import { useContent, useContentDetail, useTakedownContent } from '../../../content/queries'
+import { useContent, useContentDetail, useTakedownContent } from '@/app/pages/content/queries'
+
+interface ScopeProps {
+  workspaceId?: string
+  projectId?: string
+}
 
 const LIMIT = 10
 
@@ -54,14 +59,14 @@ function CopyId({ value }: { value: string }) {
   )
 }
 
-export function ContentTab({ workspaceId }: { workspaceId: string }) {
+export function ContentTab({ workspaceId, projectId }: ScopeProps) {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [toTakedown, setToTakedown] = useState<AdminEntryRow | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const { data, isLoading } = useContent({ page, limit: LIMIT, workspaceId })
+  const { data, isLoading } = useContent({ page, limit: LIMIT, workspaceId, projectId })
   const { data: entry } = useContentDetail(selectedId ?? '')
   const takedown = useTakedownContent()
 
@@ -151,7 +156,7 @@ export function ContentTab({ workspaceId }: { workspaceId: string }) {
         table={table}
         columns={columns}
         isLoading={isLoading}
-        emptyMessage="No content entries in this workspace."
+        emptyMessage="No content entries found."
         getRowClassName={() => 'cursor-pointer'}
         onRowClick={(row) => setSelectedId(row.id)}
       />
