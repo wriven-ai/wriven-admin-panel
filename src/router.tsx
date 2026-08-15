@@ -7,6 +7,7 @@ import { LoginPage } from '@/app/pages/login/LoginPage'
 import { OverviewPage } from '@/app/pages/overview/OverviewPage'
 import { UsersPage } from '@/app/pages/users/UsersPage'
 import { WorkspacesPage } from '@/app/pages/workspaces/WorkspacesPage'
+import { WorkspaceDetailPage } from '@/app/pages/workspaces/WorkspaceDetailPage'
 import { ProjectsPage } from '@/app/pages/projects/ProjectsPage'
 import { ContentPage } from '@/app/pages/content/ContentPage'
 import { MediaPage } from '@/app/pages/media/MediaPage'
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
           { index: true, element: <OverviewPage /> },
           { path: 'users', element: <UsersPage /> },
           { path: 'workspaces', element: <WorkspacesPage /> },
+          { path: 'workspaces/:id', element: <WorkspaceDetailPage /> },
           { path: 'projects', element: <ProjectsPage /> },
           { path: 'content', element: <ContentPage /> },
           { path: 'support', element: <SupportQueuePage /> },

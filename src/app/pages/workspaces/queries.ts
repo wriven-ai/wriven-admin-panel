@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
-import type { Paginated, AdminWorkspaceRow, AdminWorkspaceDetail, PlanView, AssignPlanDto } from '@/lib/types'
+import type { Paginated, AdminWorkspaceRow, AdminWorkspaceDetail, AdminContentTypeRow, PlanView, AssignPlanDto } from '@/lib/types'
 
 interface WorkspaceListParams {
   page: number
@@ -20,6 +20,28 @@ export function useWorkspaces(params: WorkspaceListParams) {
   return useQuery({
     queryKey: qk.workspaces.list(params),
     queryFn: () => api.get<Paginated<AdminWorkspaceRow>>(`/admin/workspaces?${sp}`),
+  })
+}
+
+interface ContentTypeListParams {
+  page: number
+  limit: number
+  workspaceId?: string
+  projectId?: string
+}
+
+/** Mirrors AdminScopedQueryDto — gateway rejects unknown properties. */
+export function useContentTypes(params: ContentTypeListParams) {
+  const sp = new URLSearchParams({
+    page: String(params.page),
+    limit: String(params.limit),
+    ...(params.workspaceId ? { workspaceId: params.workspaceId } : {}),
+    ...(params.projectId ? { projectId: params.projectId } : {}),
+  })
+
+  return useQuery({
+    queryKey: qk.contentTypes.list(params),
+    queryFn: () => api.get<Paginated<AdminContentTypeRow>>(`/admin/content-types?${sp}`),
   })
 }
 

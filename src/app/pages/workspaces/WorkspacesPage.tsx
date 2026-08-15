@@ -5,6 +5,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { DataTable } from '@/components/data-table/DataTable'
 import { FilterBar } from '@/components/data-table/FilterBar'
@@ -14,7 +15,6 @@ import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { AdminWorkspaceRow } from '@/lib/types'
 import { useWorkspaces } from './queries'
-import { WorkspaceDetailSheet } from './components/WorkspaceDetailSheet'
 
 const LIMIT = 20
 
@@ -27,10 +27,10 @@ function statusVariant(s: string | null) {
 }
 
 export function WorkspacesPage() {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [selected, setSelected] = useState<AdminWorkspaceRow | null>(null)
 
   const { data, isLoading } = useWorkspaces({ page, limit: LIMIT, q: q || undefined })
 
@@ -88,7 +88,7 @@ export function WorkspacesPage() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <Button variant="ghost" size="xs" onClick={() => setSelected(row.original)}>
+        <Button variant="ghost" size="xs" onClick={() => navigate(`/workspaces/${row.original.id}`)}>
           View
         </Button>
       ),
@@ -120,6 +120,8 @@ export function WorkspacesPage() {
         columns={columns}
         isLoading={isLoading}
         emptyMessage="No workspaces found."
+        getRowClassName={() => 'cursor-pointer'}
+        onRowClick={(row) => navigate(`/workspaces/${row.id}`)}
       />
 
       <Pagination
@@ -128,8 +130,6 @@ export function WorkspacesPage() {
         limit={LIMIT}
         onPage={setPage}
       />
-
-      <WorkspaceDetailSheet workspace={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

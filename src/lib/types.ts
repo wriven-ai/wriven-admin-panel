@@ -89,6 +89,32 @@ export interface AdminEntryDetail extends AdminEntryRow {
   data: Record<string, unknown>
 }
 
+/** Mirrors `FieldDef` from @wriven/contracts cms.types — a content-type field definition. */
+export interface FieldDef {
+  key: string
+  label: string
+  type: string
+  required?: boolean
+  unique?: boolean
+  multiple?: boolean
+  options?: string[]
+  refTypeId?: string
+  aiPrivate?: boolean
+  aiContextFields?: string[]
+}
+
+/** `GET /admin/content-types` — a content-type definition row. */
+export interface AdminContentTypeRow {
+  id: string
+  workspaceId: string
+  projectId: string
+  name: string
+  apiId: string
+  fields: FieldDef[]
+  createdAt: string
+  updatedAt: string
+}
+
 // ── Media ─────────────────────────────────────────────────────────────────────
 export interface AdminMediaRow {
   id: string

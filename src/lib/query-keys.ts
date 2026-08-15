@@ -19,6 +19,9 @@ export const qk = {
     list: (params: object) => ['content', params] as const,
     detail: (id: string) => ['content', id] as const,
   },
+  contentTypes: {
+    list: (params: object) => ['content-types', params] as const,
+  },
   media: {
     list: (params: object) => ['media', params] as const,
   },
