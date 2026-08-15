@@ -1,43 +1,21 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatBytes, formatDate } from '@/lib/format'
-import { ApiKeysTab } from '@/components/admin-tabs/ApiKeysTab'
-import { ContentTab } from '@/components/admin-tabs/ContentTab'
-import { ContentTypesTab } from '@/components/admin-tabs/ContentTypesTab'
-import { MediaTab } from '@/components/admin-tabs/MediaTab'
-import { WebhooksTab } from '@/components/admin-tabs/WebhooksTab'
 import { MembersTab } from './components/tabs/MembersTab'
 import { PlanTab } from './components/tabs/PlanTab'
 import { ProjectsTab } from './components/tabs/ProjectsTab'
 import { useWorkspaceDetail } from './queries'
 import { useWorkspaceStorage } from '../media/queries'
 
-const TAB_VALUES = [
-  'projects',
-  'members',
-  'content-types',
-  'content',
-  'media',
-  'api-keys',
-  'webhooks',
-  'plan',
-] as const
-type TabValue = (typeof TAB_VALUES)[number]
-
-const TAB_LABELS: Record<TabValue, string> = {
+const TAB_LABELS = {
   projects: 'Projects',
   members: 'Members',
-  'content-types': 'Content Types',
-  content: 'Content',
-  media: 'Media',
-  'api-keys': 'API Keys',
-  webhooks: 'Webhooks',
   plan: 'Plan',
-}
+} as const
+const TAB_VALUES = Object.keys(TAB_LABELS) as (keyof typeof TAB_LABELS)[]
+type TabValue = (typeof TAB_VALUES)[number]
 
 function statusVariant(s: string | null) {
   if (s === 'active') return 'success' as const
@@ -45,6 +23,15 @@ function statusVariant(s: string | null) {
   if (s === 'canceled' || s === 'paused') return 'error' as const
   if (s === 'trialing') return 'secondary' as const
   return 'outline' as const
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="px-5 first:pl-0 last:pr-0">
+      <dd className="text-lg font-semibold tabular-nums text-foreground">{value}</dd>
+      <dt className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+    </div>
+  )
 }
 
 export function WorkspaceDetailPage() {
@@ -59,91 +46,84 @@ export function WorkspaceDetailPage() {
 
   const wsUsage = usage?.find((u) => u.workspaceId === id)
 
+  const tabLabel = (t: TabValue) => {
+    const count =
+      t === 'members' ? detail?.memberCount : t === 'projects' ? detail?.projectCount : undefined
+    return count != null ? `${TAB_LABELS[t]} · ${count}` : TAB_LABELS[t]
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Link to="/workspaces">
-          <Button variant="ghost" size="icon-sm">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <p className="text-xs text-muted-foreground">Workspaces</p>
+    <div className="space-y-5">
+      {/* Breadcrumb */}
+      <Link
+        to="/workspaces"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Workspaces
+      </Link>
+
+      {/* Title row with inline stats on the right */}
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {isLoading ? 'Workspace…' : (detail?.name ?? 'Workspace')}
+            </h1>
+            {detail && (
+              <Badge variant={statusVariant(detail.subscriptionStatus)}>
+                {detail.subscriptionStatus?.replace('_', ' ') ?? 'no subscription'}
+              </Badge>
+            )}
+            {detail?.planKey && <Badge variant="secondary">{detail.planKey}</Badge>}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {detail ? `/${detail.slug} · ${detail.ownerEmail ?? 'unknown owner'}` : ' '}
+          </p>
+        </div>
+
+        <dl className="flex flex-wrap divide-x divide-border">
+          <Stat value={detail ? String(detail.memberCount) : '—'} label="Members" />
+          <Stat value={detail ? String(detail.projectCount) : '—'} label="Projects" />
+          <Stat value={wsUsage ? formatBytes(wsUsage.totalBytes) : '—'} label="Storage" />
+          <Stat value={detail ? formatDate(detail.createdAt) : '—'} label="Created" />
+        </dl>
       </div>
 
-      <PageHeader
-        title={isLoading ? 'Workspace…' : (detail?.name ?? 'Workspace')}
-        description={detail ? `/${detail.slug} · ${detail.ownerEmail ?? 'unknown owner'}` : undefined}
-      />
-
-      {detail && (
-        <div className="flex flex-wrap items-center gap-4">
-          <Badge variant={statusVariant(detail.subscriptionStatus)}>
-            {detail.subscriptionStatus?.replace('_', ' ') ?? 'no subscription'}
-          </Badge>
-          {detail.planKey && <Badge variant="outline">{detail.planKey}</Badge>}
-        </div>
-      )}
-
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <dd className="text-lg font-semibold tabular-nums">{detail?.memberCount ?? '—'}</dd>
-          <dt className="text-2xs text-muted-foreground">Members</dt>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <dd className="text-lg font-semibold tabular-nums">{detail?.projectCount ?? '—'}</dd>
-          <dt className="text-2xs text-muted-foreground">Projects</dt>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <dd className="text-lg font-semibold tabular-nums">
-            {wsUsage ? formatBytes(wsUsage.totalBytes) : '—'}
-          </dd>
-          <dt className="text-2xs text-muted-foreground">Storage</dt>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <dd className="text-sm font-semibold">{detail ? formatDate(detail.createdAt) : '—'}</dd>
-          <dt className="text-2xs text-muted-foreground">Created</dt>
-        </div>
-      </dl>
-
+      {/* Top-level tabs — workspace-owned resources only; project-owned
+          resources (content, media, api keys, webhooks) live in the project
+          detail page. */}
       <Tabs
         value={tab}
         onValueChange={(value) => setSearchParams(value ? { tab: value } : {}, { replace: true })}
       >
-        <TabsList variant="line">
+        <TabsList
+          variant="line"
+          className="w-full justify-start gap-6 rounded-none border-b border-border p-0"
+        >
           {TAB_VALUES.map((t) => (
-            <TabsTrigger key={t} value={t}>
-              {TAB_LABELS[t]}
+            <TabsTrigger
+              key={t}
+              value={t}
+              className="flex-none px-1 py-2 text-[13px] group-data-horizontal/tabs:after:bottom-[-1px]"
+            >
+              {tabLabel(t)}
             </TabsTrigger>
           ))}
         </TabsList>
 
         <TabsContent value="projects">
-          <div className="pt-4"><ProjectsTab workspaceId={id} /></div>
+          <div className="pt-6"><ProjectsTab workspaceId={id} /></div>
         </TabsContent>
         <TabsContent value="members">
-          <div className="pt-4">
+          <div className="pt-6">
             {detail ? <MembersTab detail={detail} /> : (
               <p className="text-sm text-muted-foreground">Loading members…</p>
             )}
           </div>
         </TabsContent>
-        <TabsContent value="content-types">
-          <div className="pt-4"><ContentTypesTab workspaceId={id} /></div>
-        </TabsContent>
-        <TabsContent value="content">
-          <div className="pt-4"><ContentTab workspaceId={id} /></div>
-        </TabsContent>
-        <TabsContent value="media">
-          <div className="pt-4"><MediaTab workspaceId={id} /></div>
-        </TabsContent>
-        <TabsContent value="api-keys">
-          <div className="pt-4"><ApiKeysTab workspaceId={id} /></div>
-        </TabsContent>
-        <TabsContent value="webhooks">
-          <div className="pt-4"><WebhooksTab workspaceId={id} /></div>
-        </TabsContent>
         <TabsContent value="plan">
-          <div className="pt-4">
+          <div className="pt-6">
             {detail ? <PlanTab workspace={detail} /> : (
               <p className="text-sm text-muted-foreground">Loading plan…</p>
             )}

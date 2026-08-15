@@ -109,7 +109,7 @@ export function UsersPage() {
             setSuspended(e.target.value === '' ? undefined : e.target.value === 'true')
             setPage(1)
           }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
         >
           <option value="">All users</option>
           <option value="false">Active</option>

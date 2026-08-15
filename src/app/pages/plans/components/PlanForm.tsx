@@ -27,7 +27,7 @@ const limitField = z.preprocess(
 )
 
 const inputCls =
-  'h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1 disabled:opacity-50'
+  'h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1 disabled:opacity-50'
 
 interface PlanFormProps {
   /** Present = edit mode (prices locked, key locked). */
@@ -218,7 +218,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
                 </p>
               )}
             </div>
-            <div className="sm:col-span-2 flex items-center justify-between rounded-md border bg-muted/50 px-3 py-2 text-xs">
+            <div className="sm:col-span-2 flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-xs">
               <span className="text-muted-foreground">Final yearly price</span>
               {yearlyPreview ? (
                 <span className="font-medium">
@@ -256,7 +256,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
                 {...register(`limits.${key}`)}
                 type="number"
                 placeholder="∞"
-                className="h-8 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+                className="h-8 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
               />
             </div>
           ))}
@@ -279,7 +279,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
             ) : (
               <div key={f.key}>
                 <label className="mb-1 block text-xs text-muted-foreground">{f.label}</label>
-                <select {...register(`features.${f.key}`)} className="h-8 rounded-md border bg-background px-2 text-sm">
+                <select {...register(`features.${f.key}`)} className="h-8 rounded-md border border-input bg-background px-2 text-sm">
                   <option value="">—</option>
                   {f.options.map((o) => (
                     <option key={o} value={o}>
@@ -299,7 +299,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
         </p>
       )}
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

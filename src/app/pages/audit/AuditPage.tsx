@@ -16,7 +16,7 @@ function AuditRow({ event }: { event: AuditLogView }) {
   const hasMetadata = Object.keys(event.metadata).length > 0
 
   return (
-    <div className="border-b last:border-0">
+    <div>
       <button
         onClick={() => hasMetadata && setExpanded(!expanded)}
         className={cn(
@@ -53,7 +53,7 @@ function AuditRow({ event }: { event: AuditLogView }) {
       </button>
 
       {expanded && hasMetadata && (
-        <div className="border-t bg-muted/20 px-12 py-3">
+        <div className="bg-muted/20 px-12 py-3">
           <pre className="overflow-x-auto text-xs text-muted-foreground">
             {JSON.stringify(event.metadata, null, 2)}
           </pre>
@@ -87,7 +87,7 @@ export function AuditPage() {
         <select
           value={targetType}
           onChange={(e) => { setTargetType(e.target.value); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
         >
           <option value="">All targets</option>
           <option value="user">User</option>
@@ -101,7 +101,7 @@ export function AuditPage() {
         </select>
       </FilterBar>
 
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg bg-card shadow-[var(--shadow-sm)]">
         {isLoading ? (
           <div className="space-y-px">
             {Array.from({ length: 10 }).map((_, i) => (

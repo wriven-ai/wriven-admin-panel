@@ -32,16 +32,16 @@ export function DataTable<TData>({
   const rows = table.getRowModel().rows
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card shadow-[var(--shadow-sm)]">
+    <div className="overflow-hidden rounded-lg bg-card shadow-[var(--shadow-sm)]">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((hg) => (
-            <TableRow key={hg.id} className="bg-muted/50 hover:bg-muted/50">
+            <TableRow key={hg.id} className="bg-muted/40 hover:bg-muted/40">
               {hg.headers.map((header) => (
                 <TableHead
                   key={header.id}
                   className={cn(
-                    'text-xs text-muted-foreground',
+                    'text-2xs uppercase tracking-wide font-medium text-muted-foreground',
                     header.column.getCanSort() &&
                       'cursor-pointer select-none hover:text-foreground',
                   )}

@@ -23,6 +23,8 @@ import { formatDateTime, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminEntryRow } from '@/lib/types'
 import { useContent, useContentDetail, useTakedownContent } from '@/app/pages/content/queries'
+import { useContentTypes } from '@/app/pages/workspaces/queries'
+import { EntryFields } from '@/components/content/EntryFields'
 
 interface ScopeProps {
   workspaceId?: string
@@ -68,6 +70,13 @@ export function ContentTab({ workspaceId, projectId }: ScopeProps) {
 
   const { data, isLoading } = useContent({ page, limit: LIMIT, workspaceId, projectId })
   const { data: entry } = useContentDetail(selectedId ?? '')
+  // Field defs for the selected entry's content type (scoped to its workspace).
+  const { data: ctPage } = useContentTypes({
+    page: 1,
+    limit: 100,
+    workspaceId: entry?.workspaceId,
+  })
+  const contentType = ctPage?.items.find((ct) => ct.id === entry?.contentTypeId) ?? null
   const takedown = useTakedownContent()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -163,7 +172,7 @@ export function ContentTab({ workspaceId, projectId }: ScopeProps) {
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
 
       <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           {entry && (
             <>
               <SheetHeader>
@@ -199,13 +208,17 @@ export function ContentTab({ workspaceId, projectId }: ScopeProps) {
                   </dl>
                 </section>
 
-                <section className="space-y-2">
+                <section className="space-y-3">
                   <h3 className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Data
+                    {contentType ? `Content · ${contentType.name}` : 'Content'}
                   </h3>
-                  <pre className="max-h-96 overflow-auto rounded-md border bg-muted/50 p-3 font-mono text-2xs leading-relaxed">
-                    {JSON.stringify(entry.data, null, 2)}
-                  </pre>
+                  {contentType ? (
+                    <EntryFields fields={contentType.fields} data={entry.data} />
+                  ) : (
+                    <pre className="max-h-96 overflow-auto rounded-md bg-muted/50 p-3 font-mono text-2xs leading-relaxed">
+                      {JSON.stringify(entry.data, null, 2)}
+                    </pre>
+                  )}
                 </section>
 
                 <p className="text-2xs text-muted-foreground">

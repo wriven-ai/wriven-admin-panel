@@ -54,7 +54,7 @@ export function LoginPage() {
       </div>
 
       {/* Form card */}
-      <div className="rounded-xl border bg-card p-6 shadow-sm">
+      <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-lg)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <div>
@@ -68,7 +68,7 @@ export function LoginPage() {
               autoFocus
               placeholder="admin@example.com"
               {...register('email')}
-              className="h-10 w-full rounded-lg border bg-background px-3 text-sm outline-none ring-ring transition-shadow focus:ring-2"
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none ring-ring transition-shadow focus:ring-2"
             />
             {errors.email && (
               <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
@@ -87,7 +87,7 @@ export function LoginPage() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 {...register('password')}
-                className="h-10 w-full rounded-lg border bg-background px-3 pr-10 text-sm outline-none ring-ring transition-shadow focus:ring-2"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-10 text-sm outline-none ring-ring transition-shadow focus:ring-2"
               />
               <button
                 type="button"
@@ -126,7 +126,7 @@ export function LoginPage() {
         </form>
 
         {DEMO_AVAILABLE && (
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 pt-4">
             <Button
               type="button"
               variant="outline"

@@ -48,7 +48,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 href={a.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block h-16 w-16 overflow-hidden rounded border"
+                className="block h-16 w-16 overflow-hidden rounded border border-border"
               >
                 {a.mime?.startsWith('image/') ? (
                   <img src={a.url} alt={a.originalFilename ?? ''} className="h-full w-full object-cover" />

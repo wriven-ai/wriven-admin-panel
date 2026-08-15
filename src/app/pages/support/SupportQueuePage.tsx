@@ -148,15 +148,15 @@ export function SupportQueuePage() {
 
       {metrics && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 max-w-lg">
-          <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-center">
             <p className="text-2xl font-semibold">{metrics.open}</p>
             <p className="text-xs text-muted-foreground">Open</p>
           </div>
-          <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-center">
             <p className="text-2xl font-semibold">{metrics.unassigned}</p>
             <p className="text-xs text-muted-foreground">Unassigned</p>
           </div>
-          <div className="rounded-lg border bg-card p-4 text-center">
+          <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-center">
             <p className="text-2xl font-semibold">{metrics.awaitingCustomer}</p>
             <p className="text-xs text-muted-foreground">Awaiting customer</p>
           </div>
@@ -202,7 +202,7 @@ export function SupportQueuePage() {
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value as SupportStatus | ''); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
         >
           <option value="">All statuses</option>
           <option value="open">Open</option>
@@ -214,7 +214,7 @@ export function SupportQueuePage() {
         <select
           value={priority}
           onChange={(e) => { setPriority(e.target.value as SupportPriority | ''); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
         >
           <option value="">All priorities</option>
           <option value="urgent">Urgent</option>
@@ -226,7 +226,7 @@ export function SupportQueuePage() {
         <select
           value={scope}
           onChange={(e) => { setScope(e.target.value as SupportScope | ''); setPage(1) }}
-          className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
         >
           <option value="">All scopes</option>
           {SCOPES.map((s) => (

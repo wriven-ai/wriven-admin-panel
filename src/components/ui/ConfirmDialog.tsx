@@ -43,7 +43,7 @@ export function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative z-10 w-full max-w-md rounded-lg border bg-card p-6 shadow-lg">
+      <div className="relative z-10 w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
         <h2 className="text-base font-semibold">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
 
@@ -54,7 +54,7 @@ export function ConfirmDialog({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-1"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-1"
               placeholder="Enter reason…"
             />
           </div>
@@ -68,7 +68,7 @@ export function ConfirmDialog({
             <input
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
-              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
             />
           </div>
         )}

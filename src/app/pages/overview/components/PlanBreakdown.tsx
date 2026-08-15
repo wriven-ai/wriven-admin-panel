@@ -13,7 +13,7 @@ interface PlanBreakdownProps {
 
 export function PlanBreakdown({ data }: PlanBreakdownProps) {
   return (
-    <div className="rounded-lg border bg-card p-5">
+    <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-5">
       <p className="mb-4 text-sm font-medium">Plan Distribution</p>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>

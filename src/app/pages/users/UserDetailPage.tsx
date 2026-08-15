@@ -21,7 +21,7 @@ const TAB_LABELS: Record<TabValue, string> = {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-lg border bg-card p-3 text-center">
+    <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-3 text-center">
       <dd className="text-lg font-semibold tabular-nums">{value}</dd>
       <dt className="text-2xs text-muted-foreground">{label}</dt>
     </div>

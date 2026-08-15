@@ -11,7 +11,6 @@ import { DataTable } from '@/components/data-table/DataTable'
 import { FilterBar } from '@/components/data-table/FilterBar'
 import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { AdminWorkspaceRow } from '@/lib/types'
 import { useWorkspaces } from './queries'
@@ -39,9 +38,16 @@ export function WorkspacesPage() {
       accessorKey: 'name',
       header: 'Workspace',
       cell: ({ row }) => (
-        <div>
-          <p className="font-medium">{row.original.name}</p>
-          <p className="text-xs text-muted-foreground">/{row.original.slug}</p>
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <span className="text-xs font-semibold text-primary">
+              {row.original.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium">{row.original.name}</p>
+            <p className="text-xs text-muted-foreground">/{row.original.slug}</p>
+          </div>
         </div>
       ),
     },
@@ -65,7 +71,7 @@ export function WorkspacesPage() {
       header: 'Plan',
       cell: ({ getValue }) => {
         const v = getValue<string | null>()
-        return v ? <Badge variant="outline">{v}</Badge> : <span className="text-muted-foreground">—</span>
+        return v ? <Badge variant="secondary">{v}</Badge> : <span className="text-muted-foreground">—</span>
       },
     },
     {
@@ -83,14 +89,6 @@ export function WorkspacesPage() {
       header: 'Created',
       cell: ({ getValue }) => (
         <span className="text-muted-foreground">{formatDate(getValue<string>())}</span>
-      ),
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <Button variant="ghost" size="xs" onClick={() => navigate(`/workspaces/${row.original.id}`)}>
-          View
-        </Button>
       ),
     },
   ]

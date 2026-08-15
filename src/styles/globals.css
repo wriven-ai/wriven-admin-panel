@@ -3,6 +3,69 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Custom variants (mirrors shadcn/tailwind.css — not a dependency here).
+   Without these, data-horizontal/data-open/etc. utilities silently no-op
+   (e.g. Tabs rendered flex-row instead of flex-col). */
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-unchecked {
+  &:where([data-state="unchecked"]),
+  &:where([data-unchecked]:not([data-unchecked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-selected {
+  &:where([data-selected="true"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-active {
+  &:where([data-state="active"]),
+  &:where([data-active]:not([data-active="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
 @theme {
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-hover: var(--brand-accent-hover);
@@ -57,7 +120,7 @@
   --brand-bg: #faf8f5;
   --brand-surface: #ffffff;
   --brand-surface-soft: #eef4f0;
-  --brand-border: #dbe5df;
+  --brand-border: #e6ece8;
 
   /* Secondary accent = amber (soft-tint surface + deep-amber text for AA at small sizes).
      Full-strength amber stays available via --brand-secondary / bg-brand-secondary. */
@@ -76,7 +139,7 @@
   --sidebar-foreground: #080d0a;
   --sidebar-accent: #eef4f0;
   --sidebar-accent-foreground: #0b6e4f;
-  --sidebar-border: #dbe5df;
+  --sidebar-border: #e6ece8;
 
   --shadow-sm: 0 4px 12px -2px rgba(8, 13, 10, 0.05), 0 2px 6px -1px rgba(8, 13, 10, 0.03);
   --shadow-lg: 0 16px 32px -4px rgba(8, 13, 10, 0.06), 0 8px 16px -2px rgba(8, 13, 10, 0.03);
@@ -89,7 +152,7 @@
   --brand-bg: #050a08;
   --brand-surface: #0c1210;
   --brand-surface-soft: #141d19;
-  --brand-border: #1d2a23;
+  --brand-border: #1a2620;
 
   --secondary: #2a1c08;
   --secondary-foreground: #fbbf24;
@@ -106,7 +169,7 @@
   --sidebar-foreground: #faf8f5;
   --sidebar-accent: #141d19;
   --sidebar-accent-foreground: #0faf7b;
-  --sidebar-border: #1d2a23;
+  --sidebar-border: #1a2620;
 
   --shadow-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.35), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 16px 32px -4px rgba(0, 0, 0, 0.5), 0 8px 16px -2px rgba(0, 0, 0, 0.4);

@@ -98,13 +98,13 @@ export function SupportTicketPage() {
       </div>
 
       {canWrite && (
-        <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
+        <div className="flex flex-wrap items-end gap-3 rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">Status</label>
             <select
               value={ticket.status}
               onChange={(e) => handleUpdate({ status: e.target.value as SupportStatus })}
-              className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
             >
               <option value="open">Open</option>
               <option value="pending">Pending</option>
@@ -118,7 +118,7 @@ export function SupportTicketPage() {
             <select
               value={ticket.priority}
               onChange={(e) => handleUpdate({ priority: e.target.value as SupportPriority })}
-              className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
             >
               <option value="low">Low</option>
               <option value="normal">Normal</option>
@@ -137,7 +137,7 @@ export function SupportTicketPage() {
                 value={ticket.assignedAdminId ?? ''}
                 onChange={(e) => handleUpdate({ assignedAdminId: e.target.value || null })}
                 disabled={!!adminsError}
-                className="h-9 rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1 disabled:opacity-50"
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1 disabled:opacity-50"
               >
                 <option value="">Unassigned</option>
                 {adminList.map((a) => (
@@ -160,7 +160,7 @@ export function SupportTicketPage() {
         </div>
       )}
 
-      <div className="rounded-lg border bg-card p-4">
+      <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
         <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Description
         </h3>
@@ -173,7 +173,7 @@ export function SupportTicketPage() {
                 href={a.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block h-20 w-20 overflow-hidden rounded border"
+                className="block h-20 w-20 overflow-hidden rounded border border-border"
               >
                 {a.mime?.startsWith('image/') ? (
                   <img src={a.url} alt={a.originalFilename ?? ''} className="h-full w-full object-cover" />
@@ -201,7 +201,7 @@ export function SupportTicketPage() {
       )}
 
       {canWrite && (
-        <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 space-y-3">
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
               <input
@@ -220,7 +220,7 @@ export function SupportTicketPage() {
             onChange={(e) => setBody(e.target.value)}
             placeholder={isInternal ? 'Add an internal note…' : 'Reply to customer…'}
             rows={4}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none ring-ring placeholder:text-muted-foreground focus:ring-1 resize-none"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-ring placeholder:text-muted-foreground focus:ring-1 resize-none"
           />
           <div className="flex justify-end">
             <Button

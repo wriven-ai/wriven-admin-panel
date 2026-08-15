@@ -33,7 +33,7 @@ export function PlanTab({ workspace }: { workspace: AdminWorkspaceRow }) {
 
   return (
     <div className="max-w-xl space-y-4">
-      <div className="rounded-lg border bg-card p-4">
+      <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
         <div className="mb-2 flex items-center gap-2">
           <p className="text-sm font-medium">{currentPlan?.name ?? workspace.planName ?? 'No plan'}</p>
           {workspace.subscriptionStatus && (
@@ -47,14 +47,14 @@ export function PlanTab({ workspace }: { workspace: AdminWorkspaceRow }) {
           </p>
         )}
         {currentPlan && Object.keys(currentPlan.limits).length > 0 && (
-          <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+          <dl className="mt-3 divide-y divide-border text-xs">
             {Object.entries(currentPlan.limits).map(([k, v]) => (
-              <li key={k} className="flex justify-between">
-                <span className="capitalize">{k}</span>
-                <span>{v ?? '∞'}</span>
-              </li>
+              <div key={k} className="flex justify-between py-1.5 first:pt-2 last:pb-0">
+                <dt className="capitalize text-muted-foreground">{k}</dt>
+                <dd className="font-medium tabular-nums">{v ?? '∞'}</dd>
+              </div>
             ))}
-          </ul>
+          </dl>
         )}
       </div>
 
@@ -65,7 +65,7 @@ export function PlanTab({ workspace }: { workspace: AdminWorkspaceRow }) {
             <select
               value={selectedPlanKey}
               onChange={(e) => setSelectedPlanKey(e.target.value)}
-              className="h-9 flex-1 rounded-md border bg-background px-3 text-sm outline-none"
+              className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring transition-shadow focus:ring-1"
             >
               <option value="">Select plan…</option>
               {plans.map((p) => (

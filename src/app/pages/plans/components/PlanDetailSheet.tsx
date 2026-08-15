@@ -66,7 +66,7 @@ export function PlanDetailSheet({
 }: PlanDetailSheetProps) {
   return (
     <Sheet open={!!plan} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
         {plan && (
           <>
             <SheetHeader>
@@ -89,7 +89,7 @@ export function PlanDetailSheet({
 
             <div className="space-y-6 px-6 pb-6">
               <Section title="Pricing">
-                <div className="rounded-lg border bg-card p-4 text-sm">
+                <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Monthly</span>
                     <span className="font-medium">
@@ -115,7 +115,7 @@ export function PlanDetailSheet({
               </Section>
 
               <Section title="Limits">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border bg-card p-4 text-xs">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-xs">
                   {PLAN_LIMIT_KEYS.map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground">{label}</span>
@@ -128,7 +128,7 @@ export function PlanDetailSheet({
               </Section>
 
               <Section title="Features">
-                <div className="space-y-1.5 rounded-lg border bg-card p-4 text-xs">
+                <div className="space-y-1.5 rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-xs">
                   {PLAN_FEATURE_DEFS.map(({ key, label }) => {
                     const value = plan.features?.[key]
                     if (key === 'supportTier') {
@@ -154,7 +154,7 @@ export function PlanDetailSheet({
               </Section>
 
               <Section title="Stripe linkage">
-                <div className="space-y-1.5 rounded-lg border bg-card p-4 text-xs">
+                <div className="space-y-1.5 rounded-lg bg-card shadow-[var(--shadow-sm)] p-4 text-xs">
                   {plan.stripeProductId ? (
                     <>
                       <div className="flex items-center justify-between gap-2">
@@ -188,7 +188,7 @@ export function PlanDetailSheet({
             </div>
 
             {canWrite && (
-              <div className="mt-auto flex gap-2 border-t p-4">
+              <div className="mt-auto flex gap-2 p-4">
                 <Button variant="outline" size="sm" onClick={() => onEdit(plan)}>
                   <Pencil className="h-3.5 w-3.5" />
                   Edit

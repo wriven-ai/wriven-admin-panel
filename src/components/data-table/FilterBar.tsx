@@ -28,7 +28,7 @@ export function FilterBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-9 w-full rounded-md border bg-background pl-8 pr-8 text-sm outline-none ring-ring placeholder:text-muted-foreground focus:ring-1"
+          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-8 text-sm outline-none ring-ring placeholder:text-muted-foreground focus:ring-1"
         />
         {value && (
           <button

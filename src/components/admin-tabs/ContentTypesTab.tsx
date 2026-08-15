@@ -83,7 +83,7 @@ export function ContentTypesTab({ workspaceId, projectId }: ScopeProps) {
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
 
       <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           {selected && (
             <>
               <SheetHeader>
@@ -99,7 +99,7 @@ export function ContentTypesTab({ workspaceId, projectId }: ScopeProps) {
                     {selected.fields.map((f) => (
                       <li
                         key={f.key}
-                        className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+                        className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm"
                       >
                         <div>
                           <p className="font-medium">{f.label}</p>

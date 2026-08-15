@@ -107,7 +107,7 @@ export function MediaPage() {
       <PageHeader title="Media" description="Storage usage and file oversight." />
 
       {storage && storage.length > 0 && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
           <p className="mb-3 text-sm font-medium">Storage by workspace</p>
           <div className="space-y-2">
             {storage

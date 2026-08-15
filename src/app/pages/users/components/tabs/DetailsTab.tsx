@@ -88,7 +88,7 @@ export function DetailsTab({ detail }: { detail: AdminUserDetail }) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className="rounded-lg border bg-card p-4">
+      <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
         <p className="mb-3 text-sm font-medium">Profile</p>
         <dl className="divide-y">
           <Row label="User ID" value={<CopyId value={detail.id} />} />
@@ -123,7 +123,7 @@ export function DetailsTab({ detail }: { detail: AdminUserDetail }) {
       </div>
 
       {canModerate && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4">
           <p className="mb-3 text-sm font-medium">Actions</p>
           {error && (
             <p className="mb-3 rounded-md border border-status-error/30 bg-status-error/10 px-3 py-2 text-xs text-status-error">

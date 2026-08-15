@@ -10,7 +10,7 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-24 animate-pulse rounded-lg border bg-muted" />
+        <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
       ))}
     </div>
   )

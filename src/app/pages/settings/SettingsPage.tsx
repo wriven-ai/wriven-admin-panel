@@ -62,7 +62,7 @@ export function SettingsPage() {
         {flags.map((flag) => (
           <div
             key={flag.key}
-            className="flex items-start justify-between gap-4 rounded-lg border bg-card p-4"
+            className="flex items-start justify-between gap-4 rounded-lg bg-card shadow-[var(--shadow-sm)] p-4"
           >
             <div>
               <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export function SettingsPage() {
         ))}
       </div>
 
-      <div className="max-w-2xl rounded-lg border border-dashed bg-card/50 p-4">
+      <div className="max-w-2xl rounded-lg bg-muted/40 p-4">
         <p className="text-xs text-muted-foreground">
           Additional platform settings (default plan, invite codes, etc.) will appear here once
           exposed by the backend <code className="font-mono">/admin/settings</code> endpoint.

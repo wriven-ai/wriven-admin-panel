@@ -89,7 +89,7 @@ export function AdminsPage() {
       {showInvite && (
         <form
           onSubmit={handleSubmit(handleInvite)}
-          className="rounded-lg border bg-card p-4"
+          className="rounded-lg bg-card shadow-[var(--shadow-sm)] p-4"
         >
           <p className="mb-3 text-sm font-medium">Invite new admin</p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -97,7 +97,7 @@ export function AdminsPage() {
               <input
                 {...register('email')}
                 placeholder="Email"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
               />
               {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
@@ -105,7 +105,7 @@ export function AdminsPage() {
               <input
                 {...register('name')}
                 placeholder="Name"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
               />
             </div>
             <div>
@@ -113,13 +113,13 @@ export function AdminsPage() {
                 {...register('password')}
                 type="password"
                 placeholder="Password (min 8 chars)"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-1"
               />
               {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
             </div>
             <select
               {...register('role')}
-              className="h-9 rounded-md border bg-background px-3 text-sm outline-none"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
             >
               <option value="member">Member (read-only)</option>
               <option value="moderator">Moderator</option>
@@ -140,7 +140,7 @@ export function AdminsPage() {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg border bg-muted" />
+            <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       )}
@@ -149,7 +149,7 @@ export function AdminsPage() {
         {admins.map((admin) => (
           <div
             key={admin.id}
-            className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3"
+            className="flex items-center gap-4 rounded-lg bg-card shadow-[var(--shadow-sm)] px-4 py-3"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase">
               {admin.name[0]}

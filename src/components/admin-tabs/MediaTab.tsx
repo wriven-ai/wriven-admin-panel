@@ -106,7 +106,7 @@ export function MediaTab({ workspaceId, projectId }: ScopeProps) {
   return (
     <div className="space-y-4">
       {wsUsage && (
-        <div className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3 text-sm">
+        <div className="flex items-center gap-4 rounded-lg bg-card shadow-[var(--shadow-sm)] px-4 py-3 text-sm">
           <span className="font-medium">Storage</span>
           <span className="tabular-nums">{formatBytes(wsUsage.totalBytes)}</span>
           <span className="text-xs text-muted-foreground">{wsUsage.assetCount} files</span>
