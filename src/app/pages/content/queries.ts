@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
-import type { Paginated, AdminEntryRow } from '@/lib/types'
+import type { Paginated, AdminEntryRow, AdminEntryDetail } from '@/lib/types'
 
 interface ContentListParams {
   page: number
@@ -26,6 +26,14 @@ export function useContent(params: ContentListParams) {
   return useQuery({
     queryKey: qk.content.list(params),
     queryFn: () => api.get<Paginated<AdminEntryRow>>(`/admin/content?${sp}`),
+  })
+}
+
+export function useContentDetail(id: string) {
+  return useQuery({
+    queryKey: qk.content.detail(id),
+    queryFn: () => api.get<AdminEntryDetail>(`/admin/content/${id}`),
+    enabled: Boolean(id),
   })
 }
 

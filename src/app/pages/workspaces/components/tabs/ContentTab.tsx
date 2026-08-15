@@ -6,15 +6,23 @@ import {
 } from '@tanstack/react-table'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Check, Copy } from 'lucide-react'
 import { DataTable } from '@/components/data-table/DataTable'
 import { Pagination } from '@/components/data-table/Pagination'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { formatRelative } from '@/lib/format'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { formatDateTime, formatRelative } from '@/lib/format'
 import { useAdminStore } from '@/stores/admin'
 import type { AdminEntryRow } from '@/lib/types'
-import { useContent, useTakedownContent } from '../../../content/queries'
+import { useContent, useContentDetail, useTakedownContent } from '../../../content/queries'
 
 const LIMIT = 10
 
@@ -24,13 +32,37 @@ function statusVariant(s: string) {
   return 'error' as const
 }
 
+function CopyId({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      onClick={() => {
+        navigator.clipboard.writeText(value)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      }}
+    >
+      <span className="font-mono">{value}</span>
+      {copied ? (
+        <Check className="h-3 w-3 text-status-success" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
+    </button>
+  )
+}
+
 export function ContentTab({ workspaceId }: { workspaceId: string }) {
   const role = useAdminStore((s) => s.me?.role)
   const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [toTakedown, setToTakedown] = useState<AdminEntryRow | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const { data, isLoading } = useContent({ page, limit: LIMIT, workspaceId })
+  const { data: entry } = useContentDetail(selectedId ?? '')
   const takedown = useTakedownContent()
 
   const canModerate = role === 'admin' || role === 'moderator'
@@ -80,7 +112,14 @@ export function ContentTab({ workspaceId }: { workspaceId: string }) {
             id: 'actions',
             cell: ({ row }: { row: { original: AdminEntryRow } }) =>
               row.original.status === 'published' ? (
-                <Button variant="destructive" size="xs" onClick={() => setToTakedown(row.original)}>
+                <Button
+                  variant="destructive"
+                  size="xs"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setToTakedown(row.original)
+                  }}
+                >
                   Takedown
                 </Button>
               ) : null,
@@ -113,8 +152,66 @@ export function ContentTab({ workspaceId }: { workspaceId: string }) {
         columns={columns}
         isLoading={isLoading}
         emptyMessage="No content entries in this workspace."
+        getRowClassName={() => 'cursor-pointer'}
+        onRowClick={(row) => setSelectedId(row.id)}
       />
       <Pagination page={page} total={data?.total ?? 0} limit={LIMIT} onPage={setPage} />
+
+      <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          {entry && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="font-mono">{entry.slug}</SheetTitle>
+                <SheetDescription>
+                  <Badge variant={statusVariant(entry.status)} className="capitalize">
+                    {entry.status}
+                  </Badge>
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-4 px-4 pb-6">
+                <section className="space-y-2">
+                  <h3 className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Identifiers
+                  </h3>
+                  <dl className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-xs text-muted-foreground">Entry ID</dt>
+                      <dd><CopyId value={entry.id} /></dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-xs text-muted-foreground">Content type</dt>
+                      <dd><CopyId value={entry.contentTypeId} /></dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-xs text-muted-foreground">Project</dt>
+                      <dd><CopyId value={entry.projectId} /></dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-xs text-muted-foreground">Author</dt>
+                      <dd><CopyId value={entry.authorId} /></dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="space-y-2">
+                  <h3 className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Data
+                  </h3>
+                  <pre className="max-h-96 overflow-auto rounded-md border bg-muted/50 p-3 font-mono text-2xs leading-relaxed">
+                    {JSON.stringify(entry.data, null, 2)}
+                  </pre>
+                </section>
+
+                <p className="text-2xs text-muted-foreground">
+                  Created {formatDateTime(entry.createdAt)} · Updated {formatDateTime(entry.updatedAt)}
+                  {entry.publishedAt && ` · Published ${formatDateTime(entry.publishedAt)}`}
+                </p>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <ConfirmDialog
         open={Boolean(toTakedown)}

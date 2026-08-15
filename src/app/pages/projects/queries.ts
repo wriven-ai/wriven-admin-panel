@@ -4,6 +4,14 @@ import { qk } from '@/lib/query-keys'
 import { queryClient } from '@/lib/query-client'
 import type { Paginated, AdminProjectRow } from '@/lib/types'
 
+export function useProjectDetail(id: string) {
+  return useQuery({
+    queryKey: qk.projects.detail(id),
+    queryFn: () => api.get<AdminProjectRow>(`/admin/projects/${id}`),
+    enabled: Boolean(id),
+  })
+}
+
 interface ProjectListParams {
   page: number
   limit: number
