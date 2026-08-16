@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, type KeyboardEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
@@ -13,9 +13,10 @@ import {
 } from '@/lib/types'
 import type { CreatePlanDto, UpdatePlanDto } from '../queries'
 
-const centsField = z.preprocess(
+/** USD dollars — the auth-service converts to cents (read paths stay cents). */
+const priceField = z.preprocess(
   (v) => (v === '' || v === null ? null : Number(v)),
-  z.number().int().min(0).nullable(),
+  z.number().min(0).nullable(),
 )
 const percentField = z.preprocess(
   (v) => (v === '' || v === null ? null : Number(v)),
@@ -24,6 +25,12 @@ const percentField = z.preprocess(
 const limitField = z.preprocess(
   (v) => (v === '' || v == null ? null : Number(v)),
   z.number().int().min(1).nullable(),
+)
+/** Tier rank — higher = more expensive. Blank = server default on create
+ *  (max existing + 1), leave-unchanged on edit. */
+const sortOrderField = z.preprocess(
+  (v) => (v === '' || v == null ? null : Number(v)),
+  z.number().int().min(0).nullable(),
 )
 
 const inputCls =
@@ -34,9 +41,11 @@ interface PlanFormProps {
   plan?: AdminPlanView
   onSubmit: (payload: CreatePlanDto | (UpdatePlanDto & { id: string })) => Promise<void>
   onCancel: () => void
+  /** Notifies the parent whenever the dirty state changes (unsaved-changes guard). */
+  onDirtyChange?: (dirty: boolean) => void
 }
 
-export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
+export function PlanForm({ plan, onSubmit, onCancel, onDirtyChange }: PlanFormProps) {
   const isEdit = !!plan
 
   const schema = useMemo(
@@ -48,8 +57,9 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
             .regex(/^[a-z0-9_]{2,40}$/, '2–40 chars: lowercase, numbers, underscores'),
           name: z.string().min(2, 'At least 2 characters').max(80),
           description: z.string().max(200).optional(),
-          priceMonthly: centsField,
+          priceMonthly: priceField,
           yearlyDiscountPercent: percentField,
+          sortOrder: sortOrderField,
           active: z.boolean(),
           limits: z.record(z.string(), limitField).optional(),
           features: z.record(z.string(), z.union([z.boolean(), z.string()])).optional(),
@@ -84,16 +94,18 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
     handleSubmit,
     setError,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<PlanFormInput, unknown, PlanFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       key: plan?.key ?? '',
       name: plan?.name ?? '',
       description: plan?.description ?? '',
-      // Prices are display-only in edit mode — never submitted.
-      priceMonthly: plan?.priceMonthly ?? null,
+      // Prices are display-only in edit mode — never submitted. Plan view is
+      // cents; the form works in dollars.
+      priceMonthly: plan?.priceMonthly != null ? plan.priceMonthly / 100 : null,
       yearlyDiscountPercent: plan?.yearlyDiscountPercent ?? null,
+      sortOrder: plan?.sortOrder ?? null,
       active: plan?.active ?? true,
       limits: Object.fromEntries(
         PLAN_LIMIT_KEYS.map(({ key }) => [key, plan?.limits?.[key] ?? null]),
@@ -102,13 +114,19 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
     },
   })
 
-  // Live preview — mirrors the server-side computation exactly.
+  // Report dirty state upward so the dialog can warn before closing.
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
+  // Live preview — mirrors the server-side computation exactly: dollars →
+  // cents (rounded), then the yearly math runs on cents.
   const monthly = watch('priceMonthly')
   const percent = watch('yearlyDiscountPercent')
   const yearlyPreview = useMemo(() => {
     if (isEdit) return null
     if (typeof monthly !== 'number' || typeof percent !== 'number') return null
-    return computeYearlyPrice(monthly, percent)
+    return computeYearlyPrice(Math.round(monthly * 100), percent)
   }, [isEdit, monthly, percent])
 
   async function submit(values: PlanFormValues) {
@@ -127,6 +145,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
           name: values.name,
           description: values.description || undefined,
           active: values.active,
+          ...(values.sortOrder != null ? { sortOrder: values.sortOrder } : {}),
           limits,
           features,
         }
@@ -138,6 +157,7 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
           ...(values.yearlyDiscountPercent != null && values.priceMonthly != null
             ? { yearlyDiscountPercent: values.yearlyDiscountPercent }
             : {}),
+          ...(values.sortOrder != null ? { sortOrder: values.sortOrder } : {}),
           limits,
           features,
         }
@@ -157,8 +177,16 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
     }
   }
 
+  // Block implicit submit: Enter in a text/number input must not save the
+  // plan — only the explicit "Create/Update plan" button submits.
+  function handleKeyDown(e: KeyboardEvent<HTMLFormElement>) {
+    if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+      e.preventDefault()
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
+    <form onSubmit={handleSubmit(submit)} onKeyDown={handleKeyDown} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium">Key</label>
@@ -177,6 +205,24 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
             <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
           )}
         </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium">Sort order (tier rank)</label>
+          <input
+            {...register('sortOrder')}
+            type="number"
+            step="1"
+            min="0"
+            placeholder="auto"
+            className={inputCls}
+          />
+          {errors.sortOrder && (
+            <p className="mt-1 text-xs text-destructive">{errors.sortOrder.message}</p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Higher = higher tier (drives upgrade/downgrade + catalog order). Blank{' '}
+            {isEdit ? 'keeps the current value' : 'appends above the current highest'}.
+          </p>
+        </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium">Description</label>
           <input {...register('description')} placeholder="Optional description…" className={inputCls} />
@@ -193,11 +239,13 @@ export function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
         ) : (
           <>
             <div>
-              <label className="mb-1 block text-xs font-medium">Price / month (cents)</label>
+              <label className="mb-1 block text-xs font-medium">Price / month (USD)</label>
               <input
                 {...register('priceMonthly')}
                 type="number"
-                placeholder="0"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 10"
                 className={inputCls}
               />
               {errors.priceMonthly && (

@@ -14,15 +14,20 @@ export function usePlans() {
 /**
  * Create payload — mirrors `CreatePlanDto` exactly (the gateway rejects
  * unknown properties with 400). Prices are create-only: send `priceMonthly`
- * and optionally `yearlyDiscountPercent`; the server computes `priceYearly`.
+ * (USD dollars — the auth-service converts to cents) and optionally
+ * `yearlyDiscountPercent`; the server computes `priceYearly`.
  */
 export interface CreatePlanDto {
   key: string
   name: string
   description?: string
+  /** USD dollars (e.g. 9.99) — converted to cents server-side. */
   priceMonthly?: number
+  /** USD dollars — converted to cents server-side. */
   priceYearly?: number
   yearlyDiscountPercent?: number
+  /** Tier rank — higher = more expensive. Blank = server appends above the current highest. */
+  sortOrder?: number
   limits?: Record<string, number | null>
   features?: Record<string, unknown>
 }
@@ -32,6 +37,8 @@ export interface UpdatePlanDto {
   name?: string
   description?: string
   active?: boolean
+  /** Tier rank — higher = more expensive. Blank = leave unchanged. */
+  sortOrder?: number
   limits?: PlanLimits
   features?: PlanFeatures
 }

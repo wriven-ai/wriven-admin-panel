@@ -43,6 +43,8 @@ export function PlansPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<AdminPlanView | null>(null)
   const [deactivating, setDeactivating] = useState<AdminPlanView | null>(null)
+  const [formDirty, setFormDirty] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   const selected = useMemo(
     () => plans?.find((p) => p.id === selectedId) ?? null,
@@ -143,6 +145,18 @@ export function PlansPage() {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  function closeForm() {
+    setFormOpen(false)
+    setEditing(null)
+    setFormDirty(false)
+  }
+
+  /** Close guard: warn before discarding unsaved form changes. */
+  function requestCloseForm() {
+    if (formDirty) setConfirmDiscard(true)
+    else closeForm()
+  }
+
   async function handleFormSubmit(payload: CreatePlanDto | (UpdatePlanDto & { id: string })) {
     if ('id' in payload) {
       await updatePlan.mutateAsync(payload)
@@ -151,8 +165,7 @@ export function PlansPage() {
       await createPlan.mutateAsync(payload)
       toast.success('Plan created.')
     }
-    setFormOpen(false)
-    setEditing(null)
+    closeForm()
   }
 
   async function handleToggleActive(plan: AdminPlanView) {
@@ -214,7 +227,7 @@ export function PlansPage() {
         }}
       />
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) requestCloseForm() }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? `Edit ${editing.name}` : 'New plan'}</DialogTitle>
@@ -228,10 +241,8 @@ export function PlansPage() {
             key={editing?.id ?? 'create'}
             plan={editing ?? undefined}
             onSubmit={handleFormSubmit}
-            onCancel={() => {
-              setFormOpen(false)
-              setEditing(null)
-            }}
+            onCancel={requestCloseForm}
+            onDirtyChange={setFormDirty}
           />
         </DialogContent>
       </Dialog>
@@ -245,6 +256,19 @@ export function PlansPage() {
         onCancel={() => setDeactivating(null)}
         onConfirm={() => {
           if (deactivating) handleToggleActive(deactivating)
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDiscard}
+        title="Discard unsaved changes?"
+        description="The plan form has changes that haven't been saved. Closing it will discard them."
+        confirmLabel="Discard changes"
+        destructive
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={() => {
+          setConfirmDiscard(false)
+          closeForm()
         }}
       />
     </div>
