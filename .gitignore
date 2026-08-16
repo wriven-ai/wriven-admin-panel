@@ -27,3 +27,4 @@ AGENT.MD
 backend.md
 .vercel
 .env*
+.env
